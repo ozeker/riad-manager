@@ -1,8 +1,7 @@
 import { PageHeader } from "@/components/layout/page-header"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { RoomManager } from "@/components/settings/room-manager"
 import { Separator } from "@/components/ui/separator"
-import { formatMoney } from "@/lib/format"
 import { getProperty, getRooms } from "@/lib/data"
 
 export const dynamic = "force-dynamic"
@@ -15,7 +14,7 @@ export default async function SettingsPage() {
       <PageHeader
         eyebrow="Setup"
         title="Settings"
-        description="Property and room settings are mocked here before database storage is added."
+        description="Manage the property profile and room setup used by bookings and the reservation calendar."
       />
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <Card className="rounded-lg border-border/80 shadow-none">
@@ -49,31 +48,7 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-lg border-border/80 shadow-none">
-          <CardHeader>
-            <CardTitle className="text-base">Rooms</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {rooms.map((room) => (
-              <div
-                key={room.id}
-                className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="font-medium">{room.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Capacity {room.capacity}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">{formatMoney(room.rates.MAD, "MAD")}</Badge>
-                  <Badge variant="outline">{formatMoney(room.rates.EUR, "EUR")}</Badge>
-                  <Badge variant="outline">{formatMoney(room.rates.USD, "USD")}</Badge>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <RoomManager rooms={rooms} />
       </div>
     </>
   )

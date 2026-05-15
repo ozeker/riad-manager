@@ -47,8 +47,9 @@ export async function getProperty() {
   return prisma.property.findFirst()
 }
 
-export async function getRooms(): Promise<Room[]> {
+export async function getRooms(options?: { activeOnly?: boolean }): Promise<Room[]> {
   const rows = await prisma.room.findMany({
+    where: options?.activeOnly ? { active: true } : undefined,
     orderBy: { createdAt: "asc" },
   })
 

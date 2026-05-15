@@ -6,7 +6,10 @@ import { getBookings, getRooms } from "@/lib/data"
 export const dynamic = "force-dynamic"
 
 export default async function CalendarPage() {
-  const [rooms, bookings] = await Promise.all([getRooms(), getBookings()])
+  const [rooms, bookings] = await Promise.all([
+    getRooms({ activeOnly: true }),
+    getBookings(),
+  ])
 
   return (
     <>

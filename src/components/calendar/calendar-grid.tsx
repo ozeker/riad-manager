@@ -71,6 +71,11 @@ export function CalendarGrid({
     gridTemplateColumns: `repeat(${dates.length}, minmax(7rem, 1fr))`,
   }
 
+  const visibleRoomIds = useMemo(
+    () => new Set(rooms.map((room) => room.id)),
+    [rooms]
+  )
+
   function openCreate(roomId: string, date: Date) {
     setModalKey((current) => current + 1)
     setSelectedBooking(null)
@@ -121,13 +126,15 @@ export function CalendarGrid({
     setDraftCell(null)
   }
 
-  const nightsInView = bookings.filter((booking) =>
-    dates.some((date) =>
-      isWithinInterval(date, {
-        start: parseISO(booking.checkIn),
-        end: addDays(parseISO(booking.checkOut), -1),
-      })
-    )
+  const nightsInView = bookings.filter(
+    (booking) =>
+      visibleRoomIds.has(booking.roomId) &&
+      dates.some((date) =>
+        isWithinInterval(date, {
+          start: parseISO(booking.checkIn),
+          end: addDays(parseISO(booking.checkOut), -1),
+        })
+      )
   )
 
   return (

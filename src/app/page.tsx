@@ -35,6 +35,7 @@ export default async function DashboardPage() {
   const paidMad = payments
     .filter((payment) => payment.currency === "MAD")
     .reduce((total, payment) => total + payment.amount, 0)
+  const activeRoomCount = rooms.filter((room) => room.active).length
 
   return (
     <>
@@ -49,7 +50,7 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Active rooms"
-          value={`${rooms.length}`}
+          value={`${activeRoomCount}`}
           detail="All rooms available for booking"
           icon={Hotel}
           tone="blue"
