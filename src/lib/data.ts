@@ -24,6 +24,17 @@ type BookingWithGuest = {
   notes: string | null
 }
 
+type PaymentWithBooking = {
+  id: string
+  bookingId: string
+  booking: { guest: { fullName: string } }
+  amount: number
+  currency: string
+  method: string
+  paymentDate: Date
+  notes: string | null
+}
+
 function dateString(value: Date) {
   return value.toISOString().slice(0, 10)
 }
@@ -42,6 +53,19 @@ export function serializeBooking(booking: BookingWithGuest): Booking {
     currency: booking.currency as Currency,
     status: booking.status as Booking["status"],
     notes: booking.notes ?? "",
+  }
+}
+
+export function serializePayment(payment: PaymentWithBooking): Payment {
+  return {
+    id: payment.id,
+    bookingId: payment.bookingId,
+    guestName: payment.booking.guest.fullName,
+    amount: payment.amount,
+    currency: payment.currency as Currency,
+    method: payment.method as Payment["method"],
+    paymentDate: dateString(payment.paymentDate),
+    notes: payment.notes ?? "",
   }
 }
 
@@ -100,16 +124,7 @@ export async function getPayments(): Promise<Payment[]> {
     orderBy: { paymentDate: "desc" },
   })
 
-  return rows.map((payment) => ({
-    id: payment.id,
-    bookingId: payment.bookingId,
-    guestName: payment.booking.guest.fullName,
-    amount: payment.amount,
-    currency: payment.currency as Currency,
-    method: payment.method as Payment["method"],
-    paymentDate: dateString(payment.paymentDate),
-    notes: payment.notes ?? "",
-  }))
+  return rows.map(serializePayment)
 }
 
 export async function getCashMovements(): Promise<CashMovement[]> {
