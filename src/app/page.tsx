@@ -1,65 +1,146 @@
-import Image from "next/image";
+import {
+  CalendarCheck,
+  CreditCard,
+  Hotel,
+  WalletCards,
+} from "lucide-react"
 
-export default function Home() {
+import { PageHeader } from "@/components/layout/page-header"
+import { StatCard } from "@/components/dashboard/stat-card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { formatMoney } from "@/lib/format"
+import { initialBookings, payments, property, rooms } from "@/lib/mock-data"
+
+export default function DashboardPage() {
+  const paidMad = payments
+    .filter((payment) => payment.currency === "MAD")
+    .reduce((total, payment) => total + payment.amount, 0)
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      <PageHeader
+        eyebrow="Today"
+        title="Riad operations dashboard"
+        description="A calm overview of bookings, rooms, payments, and cash for the owner."
+        badge="UI prototype"
+        action={<Button>Manual booking</Button>}
+      />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Active rooms"
+          value={`${rooms.length}`}
+          detail="All rooms available for booking"
+          icon={Hotel}
+          tone="blue"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+        <StatCard
+          title="June bookings"
+          value={`${initialBookings.length}`}
+          detail="Across Booking.com, Airbnb, direct, and walk-in"
+          icon={CalendarCheck}
+          tone="green"
+        />
+        <StatCard
+          title="Recorded cash"
+          value={formatMoney(paidMad, "MAD")}
+          detail="Cash-heavy payments tracked separately"
+          icon={WalletCards}
+          tone="amber"
+        />
+        <StatCard
+          title="Open balances"
+          value="2"
+          detail="Bookings with partial or pending payment"
+          icon={CreditCard}
+        />
+      </div>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <Card className="rounded-lg border-border/80 shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">Upcoming arrivals</CardTitle>
+            <Badge variant="secondary">{property.name}</Badge>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Guest</TableHead>
+                  <TableHead>Room</TableHead>
+                  <TableHead>Dates</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {initialBookings.slice(0, 5).map((booking) => {
+                  const room = rooms.find((item) => item.id === booking.roomId)
+
+                  return (
+                    <TableRow key={booking.id}>
+                      <TableCell className="font-medium">{booking.guestName}</TableCell>
+                      <TableCell>{room?.name}</TableCell>
+                      <TableCell>
+                        {booking.checkIn} to {booking.checkOut}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatMoney(booking.amount, booking.currency)}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-lg border-border/80 shadow-none">
+          <CardHeader>
+            <CardTitle className="text-base">Owner focus</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="cash" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="cash">Cash</TabsTrigger>
+                <TabsTrigger value="invoices">Invoices</TabsTrigger>
+                <TabsTrigger value="export">Export</TabsTrigger>
+              </TabsList>
+              <TabsContent value="cash" className="mt-4 space-y-3 text-sm">
+                <p className="leading-6 text-muted-foreground">
+                  Track opening balance, cash in, cash out, and closing balance
+                  without needing accounting software.
+                </p>
+                <Badge variant="outline">Cash-first workflow</Badge>
+              </TabsContent>
+              <TabsContent value="invoices" className="mt-4 space-y-3 text-sm">
+                <p className="leading-6 text-muted-foreground">
+                  Invoice drafts stay editable before finalization, including
+                  tourist tax and VAT lines.
+                </p>
+                <Badge variant="outline">Draft before final</Badge>
+              </TabsContent>
+              <TabsContent value="export" className="mt-4 space-y-3 text-sm">
+                <p className="leading-6 text-muted-foreground">
+                  The owner should always be able to export clean CSV records
+                  for bookings, guests, payments, invoices, and cash.
+                </p>
+                <Badge variant="outline">Owner controls data</Badge>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  )
 }
