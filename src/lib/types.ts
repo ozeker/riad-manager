@@ -25,6 +25,7 @@ export type Room = {
 
 export type Booking = {
   id: string
+  guestId: string
   guestName: string
   roomId: string
   checkIn: string
@@ -46,6 +47,8 @@ export type Guest = {
   documentNumber: string
   notes: string
 }
+
+export type PaymentStatus = "unpaid" | "partial" | "paid"
 
 export type Payment = {
   id: string

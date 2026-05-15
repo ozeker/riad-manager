@@ -11,6 +11,7 @@ import type {
 
 type BookingWithGuest = {
   id: string
+  guestId: string
   guest: { fullName: string }
   roomId: string
   checkIn: Date
@@ -30,6 +31,7 @@ function dateString(value: Date) {
 export function serializeBooking(booking: BookingWithGuest): Booking {
   return {
     id: booking.id,
+    guestId: booking.guestId,
     guestName: booking.guest.fullName,
     roomId: booking.roomId,
     checkIn: dateString(booking.checkIn),

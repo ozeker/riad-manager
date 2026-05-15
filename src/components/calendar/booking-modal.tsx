@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { differenceInCalendarDays, parseISO } from "date-fns"
+import { Archive, Ban } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -28,10 +29,11 @@ import type {
   BookingSource,
   BookingStatus,
   Currency,
+  Guest,
   Room,
 } from "@/lib/types"
 
-type BookingDraft = Omit<Booking, "id"> & { id?: string }
+export type BookingDraft = Omit<Booking, "id"> & { id?: string }
 
 type BookingModalProps = {
   open: boolean
@@ -39,8 +41,11 @@ type BookingModalProps = {
   initialRoomId?: string
   initialDate?: string
   rooms: Room[]
+  guests: Guest[]
   onOpenChange: (open: boolean) => void
   onSave: (booking: BookingDraft) => Promise<void> | void
+  onCancelBooking?: (booking: Booking) => Promise<void> | void
+  onDeleteBooking?: (booking: Booking) => Promise<void> | void
 }
 
 const sources: BookingSource[] = [
@@ -62,6 +67,8 @@ const statuses: BookingStatus[] = [
   "no show",
 ]
 
+const newGuestValue = "__new_guest__"
+
 function addOneDay(date: string) {
   const parsed = parseISO(date)
   parsed.setDate(parsed.getDate() + 1)
@@ -70,6 +77,7 @@ function addOneDay(date: string) {
 
 function createEmptyDraft(roomId: string, date: string): BookingDraft {
   return {
+    guestId: "",
     guestName: "",
     roomId,
     checkIn: date,
@@ -89,19 +97,26 @@ export function BookingModal({
   initialRoomId,
   initialDate,
   rooms,
+  guests,
   onOpenChange,
   onSave,
+  onCancelBooking,
+  onDeleteBooking,
 }: BookingModalProps) {
   const fallbackRoomId = rooms[0]?.id ?? ""
   const fallbackDate = initialDate ?? "2026-06-01"
-
   const initialDraft =
     booking ?? createEmptyDraft(initialRoomId ?? fallbackRoomId, fallbackDate)
 
   const [draft, setDraft] = useState<BookingDraft>(initialDraft)
   const [saving, setSaving] = useState(false)
+  const [destructiveAction, setDestructiveAction] = useState<
+    "cancel" | "delete" | null
+  >(null)
 
   const mode = booking ? "Edit booking" : "Create booking"
+  const selectedGuestValue = draft.guestId || newGuestValue
+  const isNewGuest = selectedGuestValue === newGuestValue
 
   function updateDraft<K extends keyof BookingDraft>(
     key: K,
@@ -111,8 +126,8 @@ export function BookingModal({
   }
 
   async function handleSave() {
-    if (!draft.guestName.trim()) {
-      toast.error("Add the guest name before saving.")
+    if (!draft.guestId && !draft.guestName.trim()) {
+      toast.error("Choose an existing guest or add a new guest name.")
       return
     }
 
@@ -138,26 +153,84 @@ export function BookingModal({
     }
   }
 
+  async function handleCancelBooking() {
+    if (!booking || !onCancelBooking) return
+
+    setDestructiveAction("cancel")
+    try {
+      await onCancelBooking(booking)
+    } catch {
+      toast.error("The booking could not be cancelled.")
+    } finally {
+      setDestructiveAction(null)
+    }
+  }
+
+  async function handleDeleteBooking() {
+    if (!booking || !onDeleteBooking) return
+
+    setDestructiveAction("delete")
+    try {
+      await onDeleteBooking(booking)
+    } catch {
+      toast.error("The booking could not be archived.")
+    } finally {
+      setDestructiveAction(null)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{mode}</DialogTitle>
           <DialogDescription>
-            This prototype saves changes only in the current browser session.
+            Booking changes are saved to the local SQLite database.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="guestName">Guest name</Label>
-            <Input
-              id="guestName"
-              value={draft.guestName}
-              placeholder="Guest full name"
-              onChange={(event) => updateDraft("guestName", event.target.value)}
-            />
+            <Label>Guest</Label>
+            <Select
+              value={selectedGuestValue}
+              onValueChange={(value) => {
+                if (value === newGuestValue) {
+                  updateDraft("guestId", "")
+                  updateDraft("guestName", "")
+                  return
+                }
+
+                const guest = guests.find((item) => item.id === value)
+                updateDraft("guestId", value)
+                updateDraft("guestName", guest?.fullName ?? "")
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose guest" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={newGuestValue}>New guest</SelectItem>
+                {guests.map((guest) => (
+                  <SelectItem key={guest.id} value={guest.id}>
+                    {guest.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
+          {isNewGuest ? (
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="guestName">New guest name</Label>
+              <Input
+                id="guestName"
+                value={draft.guestName}
+                placeholder="Guest full name"
+                onChange={(event) => updateDraft("guestName", event.target.value)}
+              />
+            </div>
+          ) : null}
 
           <div className="space-y-2">
             <Label>Room</Label>
@@ -288,13 +361,41 @@ export function BookingModal({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save booking"}
-          </Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {booking && onCancelBooking ? (
+              <Button
+                variant="outline"
+                onClick={handleCancelBooking}
+                disabled={saving || destructiveAction !== null}
+              >
+                <Ban className="size-4" />
+                {destructiveAction === "cancel" ? "Cancelling..." : "Cancel booking"}
+              </Button>
+            ) : null}
+            {booking && onDeleteBooking ? (
+              <Button
+                variant="outline"
+                onClick={handleDeleteBooking}
+                disabled={saving || destructiveAction !== null}
+              >
+                <Archive className="size-4" />
+                {destructiveAction === "delete" ? "Archiving..." : "Archive"}
+              </Button>
+            ) : null}
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={saving || destructiveAction !== null}
+            >
+              Close
+            </Button>
+            <Button onClick={handleSave} disabled={saving || destructiveAction !== null}>
+              {saving ? "Saving..." : "Save booking"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

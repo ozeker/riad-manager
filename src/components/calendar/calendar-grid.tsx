@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import type { Booking, BookingSource, Room } from "@/lib/types"
+import type { Booking, BookingSource, Guest, Room } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const calendarStart = new Date(2026, 5, 1)
@@ -48,13 +48,16 @@ function visibleSpan(booking: Booking, dates: Date[]) {
 type CalendarGridProps = {
   rooms: Room[]
   initialBookings: Booking[]
+  guests: Guest[]
 }
 
 export function CalendarGrid({
   rooms,
   initialBookings,
+  guests: initialGuests,
 }: CalendarGridProps) {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings)
+  const [guests, setGuests] = useState<Guest[]>(initialGuests)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [draftCell, setDraftCell] = useState<{
     roomId: string
@@ -110,6 +113,24 @@ export function CalendarGrid({
 
     const savedBooking = (await response.json()) as Booking
 
+    if (
+      savedBooking.guestId &&
+      !guests.some((guest) => guest.id === savedBooking.guestId)
+    ) {
+      setGuests((current) => [
+        ...current,
+        {
+          id: savedBooking.guestId,
+          fullName: savedBooking.guestName,
+          phone: "",
+          email: "",
+          nationality: "",
+          documentNumber: "",
+          notes: "",
+        },
+      ])
+    }
+
     if (draft.id) {
       setBookings((current) =>
         current.map((booking) =>
@@ -124,6 +145,25 @@ export function CalendarGrid({
 
     setSelectedBooking(null)
     setDraftCell(null)
+  }
+
+  async function handleCancelBooking(booking: Booking) {
+    await handleSave({ ...booking, status: "cancelled" })
+  }
+
+  async function handleDeleteBooking(booking: Booking) {
+    const response = await fetch(`/api/bookings?id=${booking.id}`, {
+      method: "DELETE",
+    })
+
+    if (!response.ok) {
+      throw new Error("Could not archive booking.")
+    }
+
+    setBookings((current) => current.filter((item) => item.id !== booking.id))
+    setSelectedBooking(null)
+    setDraftCell(null)
+    toast.success("Booking archived")
   }
 
   const nightsInView = bookings.filter(
@@ -264,8 +304,11 @@ export function CalendarGrid({
         initialRoomId={draftCell?.roomId}
         initialDate={draftCell?.date}
         rooms={rooms}
+        guests={guests}
         onOpenChange={closeModal}
         onSave={handleSave}
+        onCancelBooking={handleCancelBooking}
+        onDeleteBooking={handleDeleteBooking}
       />
     </>
   )

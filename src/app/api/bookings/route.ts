@@ -7,6 +7,7 @@ export const runtime = "nodejs"
 
 type BookingPayload = {
   id?: string
+  guestId?: string
   guestName?: string
   roomId?: string
   checkIn?: string
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
   const payload = (await request.json()) as BookingPayload
 
   if (
-    !payload.guestName ||
+    (!payload.guestId && !payload.guestName) ||
     !payload.roomId ||
     !payload.checkIn ||
     !payload.checkOut ||
@@ -41,16 +42,21 @@ export async function POST(request: Request) {
     )
   }
 
-  const guest =
-    (await prisma.guest.findFirst({
-      where: { fullName: payload.guestName },
-    })) ??
-    (await prisma.guest.create({
-      data: {
-        fullName: payload.guestName,
-        notes: "Created from calendar prototype.",
-      },
-    }))
+  const guest = payload.guestId
+    ? await prisma.guest.findUnique({ where: { id: payload.guestId } })
+    : (await prisma.guest.findFirst({
+        where: { fullName: payload.guestName },
+      })) ??
+      (await prisma.guest.create({
+        data: {
+          fullName: payload.guestName ?? "",
+          notes: "Created from booking form.",
+        },
+      }))
+
+  if (!guest) {
+    return NextResponse.json({ message: "Guest not found." }, { status: 404 })
+  }
 
   const data = {
     guestId: guest.id,
@@ -77,4 +83,23 @@ export async function POST(request: Request) {
       })
 
   return NextResponse.json(serializeBooking(booking))
+}
+
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const id = searchParams.get("id")
+
+  if (!id) {
+    return NextResponse.json({ message: "Booking id is required." }, { status: 400 })
+  }
+
+  await prisma.booking.update({
+    where: { id },
+    data: {
+      status: "cancelled",
+      deletedAt: new Date(),
+    },
+  })
+
+  return NextResponse.json({ ok: true })
 }

@@ -60,6 +60,7 @@ export const rooms: Room[] = [
 export const initialBookings: Booking[] = [
   {
     id: "booking-1",
+    guestId: "guest-1",
     guestName: "John Miller",
     roomId: "zellij-suite",
     checkIn: "2026-06-01",
@@ -73,6 +74,7 @@ export const initialBookings: Booking[] = [
   },
   {
     id: "booking-2",
+    guestId: "guest-2",
     guestName: "Sarah Johnson",
     roomId: "family-suite",
     checkIn: "2026-06-03",
@@ -86,6 +88,7 @@ export const initialBookings: Booking[] = [
   },
   {
     id: "booking-3",
+    guestId: "guest-3",
     guestName: "Ahmed Benali",
     roomId: "medina-room",
     checkIn: "2026-06-05",
@@ -99,6 +102,7 @@ export const initialBookings: Booking[] = [
   },
   {
     id: "booking-4",
+    guestId: "guest-4",
     guestName: "Emily Carter",
     roomId: "terrace-room",
     checkIn: "2026-06-07",
@@ -112,6 +116,7 @@ export const initialBookings: Booking[] = [
   },
   {
     id: "booking-5",
+    guestId: "guest-5",
     guestName: "Laura Smith",
     roomId: "andalusia-room",
     checkIn: "2026-06-09",
