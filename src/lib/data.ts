@@ -35,6 +35,16 @@ type PaymentWithBooking = {
   notes: string | null
 }
 
+type CashMovementRow = {
+  id: string
+  date: Date
+  type: string
+  category: string
+  amount: number
+  currency: string
+  notes: string | null
+}
+
 function dateString(value: Date) {
   return value.toISOString().slice(0, 10)
 }
@@ -66,6 +76,18 @@ export function serializePayment(payment: PaymentWithBooking): Payment {
     method: payment.method as Payment["method"],
     paymentDate: dateString(payment.paymentDate),
     notes: payment.notes ?? "",
+  }
+}
+
+export function serializeCashMovement(movement: CashMovementRow): CashMovement {
+  return {
+    id: movement.id,
+    date: dateString(movement.date),
+    type: movement.type as CashMovement["type"],
+    category: movement.category,
+    amount: movement.amount,
+    currency: "MAD",
+    notes: movement.notes ?? "",
   }
 }
 
@@ -132,15 +154,7 @@ export async function getCashMovements(): Promise<CashMovement[]> {
     orderBy: { date: "asc" },
   })
 
-  return rows.map((movement) => ({
-    id: movement.id,
-    date: dateString(movement.date),
-    type: movement.type as CashMovement["type"],
-    category: movement.category,
-    amount: movement.amount,
-    currency: "MAD",
-    notes: movement.notes ?? "",
-  }))
+  return rows.map(serializeCashMovement)
 }
 
 export async function getInvoices(): Promise<Invoice[]> {
