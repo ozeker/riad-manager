@@ -40,7 +40,7 @@ type BookingModalProps = {
   initialDate?: string
   rooms: Room[]
   onOpenChange: (open: boolean) => void
-  onSave: (booking: BookingDraft) => void
+  onSave: (booking: BookingDraft) => Promise<void> | void
 }
 
 const sources: BookingSource[] = [
@@ -99,6 +99,7 @@ export function BookingModal({
     booking ?? createEmptyDraft(initialRoomId ?? fallbackRoomId, fallbackDate)
 
   const [draft, setDraft] = useState<BookingDraft>(initialDraft)
+  const [saving, setSaving] = useState(false)
 
   const mode = booking ? "Edit booking" : "Create booking"
 
@@ -109,7 +110,7 @@ export function BookingModal({
     setDraft((current) => ({ ...current, [key]: value }))
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!draft.guestName.trim()) {
       toast.error("Add the guest name before saving.")
       return
@@ -122,12 +123,19 @@ export function BookingModal({
       return
     }
 
-    onSave({
-      ...draft,
-      guestName: draft.guestName.trim(),
-      amount: Number(draft.amount) || 0,
-      guests: Number(draft.guests) || 1,
-    })
+    setSaving(true)
+    try {
+      await onSave({
+        ...draft,
+        guestName: draft.guestName.trim(),
+        amount: Number(draft.amount) || 0,
+        guests: Number(draft.guests) || 1,
+      })
+    } catch {
+      toast.error("The booking could not be saved.")
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -281,10 +289,12 @@ export function BookingModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save booking</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : "Save booking"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

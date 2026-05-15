@@ -17,8 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { initialBookings, rooms } from "@/lib/mock-data"
-import type { Booking, BookingSource } from "@/lib/types"
+import type { Booking, BookingSource, Room } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const calendarStart = new Date(2026, 5, 1)
@@ -46,7 +45,15 @@ function visibleSpan(booking: Booking, dates: Date[]) {
   }
 }
 
-export function CalendarGrid() {
+type CalendarGridProps = {
+  rooms: Room[]
+  initialBookings: Booking[]
+}
+
+export function CalendarGrid({
+  rooms,
+  initialBookings,
+}: CalendarGridProps) {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [draftCell, setDraftCell] = useState<{
@@ -83,20 +90,30 @@ export function CalendarGrid() {
     }
   }
 
-  function handleSave(draft: Omit<Booking, "id"> & { id?: string }) {
+  async function handleSave(draft: Omit<Booking, "id"> & { id?: string }) {
+    const response = await fetch("/api/bookings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(draft),
+    })
+
+    if (!response.ok) {
+      throw new Error("Could not save booking.")
+    }
+
+    const savedBooking = (await response.json()) as Booking
+
     if (draft.id) {
       setBookings((current) =>
         current.map((booking) =>
-          booking.id === draft.id ? ({ ...draft, id: draft.id } as Booking) : booking
+          booking.id === savedBooking.id ? savedBooking : booking
         )
       )
       toast.success("Booking updated")
     } else {
-      const booking: Booking = {
-        ...draft,
-        id: `booking-${Date.now()}`,
-      }
-      setBookings((current) => [...current, booking])
+      setBookings((current) => [...current, savedBooking])
       toast.success("Booking created")
     }
 
@@ -218,7 +235,14 @@ export function CalendarGrid() {
 
           <div className="flex flex-col gap-3 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>{nightsInView.length} bookings visible in this view</span>
-            <Button variant="outline" onClick={() => openCreate(rooms[0].id, dates[0])}>
+            <Button
+              variant="outline"
+              disabled={rooms.length === 0}
+              onClick={() => {
+                const firstRoom = rooms[0]
+                if (firstRoom) openCreate(firstRoom.id, dates[0])
+              }}
+            >
               <Plus className="size-4" />
               New booking
             </Button>

@@ -20,9 +20,18 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { formatMoney } from "@/lib/format"
-import { initialBookings, payments, property, rooms } from "@/lib/mock-data"
+import { getBookings, getPayments, getProperty, getRooms } from "@/lib/data"
 
-export default function DashboardPage() {
+export const dynamic = "force-dynamic"
+
+export default async function DashboardPage() {
+  const [rooms, bookings, payments, property] = await Promise.all([
+    getRooms(),
+    getBookings(),
+    getPayments(),
+    getProperty(),
+  ])
+
   const paidMad = payments
     .filter((payment) => payment.currency === "MAD")
     .reduce((total, payment) => total + payment.amount, 0)
@@ -47,7 +56,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="June bookings"
-          value={`${initialBookings.length}`}
+          value={`${bookings.length}`}
           detail="Across Booking.com, Airbnb, direct, and walk-in"
           icon={CalendarCheck}
           tone="green"
@@ -71,7 +80,7 @@ export default function DashboardPage() {
         <Card className="rounded-lg border-border/80 shadow-none">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Upcoming arrivals</CardTitle>
-            <Badge variant="secondary">{property.name}</Badge>
+            <Badge variant="secondary">{property?.name ?? "Riad Al Fes"}</Badge>
           </CardHeader>
           <CardContent>
             <Table>
@@ -84,7 +93,7 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {initialBookings.slice(0, 5).map((booking) => {
+                {bookings.slice(0, 5).map((booking) => {
                   const room = rooms.find((item) => item.id === booking.roomId)
 
                   return (

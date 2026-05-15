@@ -11,9 +11,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatMoney } from "@/lib/format"
-import { cashMovements } from "@/lib/mock-data"
+import { getCashMovements } from "@/lib/data"
 
-export default function CashDrawerPage() {
+export const dynamic = "force-dynamic"
+
+export default async function CashDrawerPage() {
+  const cashMovements = await getCashMovements()
+
   return (
     <>
       <PageHeader

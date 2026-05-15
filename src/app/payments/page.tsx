@@ -11,9 +11,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatMoney } from "@/lib/format"
-import { payments } from "@/lib/mock-data"
+import { getPayments } from "@/lib/data"
 
-export default function PaymentsPage() {
+export const dynamic = "force-dynamic"
+
+export default async function PaymentsPage() {
+  const payments = await getPayments()
+
   return (
     <>
       <PageHeader

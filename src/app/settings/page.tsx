@@ -2,10 +2,14 @@ import { PageHeader } from "@/components/layout/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { property, rooms } from "@/lib/mock-data"
 import { formatMoney } from "@/lib/format"
+import { getProperty, getRooms } from "@/lib/data"
 
-export default function SettingsPage() {
+export const dynamic = "force-dynamic"
+
+export default async function SettingsPage() {
+  const [property, rooms] = await Promise.all([getProperty(), getRooms()])
+
   return (
     <>
       <PageHeader
@@ -21,22 +25,26 @@ export default function SettingsPage() {
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Name</span>
-              <span className="font-medium">{property.name}</span>
+              <span className="font-medium">{property?.name ?? "Riad Al Fes"}</span>
             </div>
             <Separator />
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Legal name</span>
-              <span className="font-medium">{property.legalName}</span>
+              <span className="font-medium">
+                {property?.legalName ?? "Riad Al Fes SARL"}
+              </span>
             </div>
             <Separator />
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Phone</span>
-              <span className="font-medium">{property.phone}</span>
+              <span className="font-medium">
+                {property?.phone ?? "+212 600 000 000"}
+              </span>
             </div>
             <Separator />
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">ICE</span>
-              <span className="font-medium">{property.ice}</span>
+              <span className="font-medium">{property?.ice ?? "001234567000089"}</span>
             </div>
           </CardContent>
         </Card>

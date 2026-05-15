@@ -1,8 +1,13 @@
 import { CalendarGrid } from "@/components/calendar/calendar-grid"
 import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
+import { getBookings, getRooms } from "@/lib/data"
 
-export default function CalendarPage() {
+export const dynamic = "force-dynamic"
+
+export default async function CalendarPage() {
+  const [rooms, bookings] = await Promise.all([getRooms(), getBookings()])
+
   return (
     <>
       <PageHeader
@@ -12,7 +17,7 @@ export default function CalendarPage() {
         badge="Mock data"
         action={<Button variant="outline">Import iCal later</Button>}
       />
-      <CalendarGrid />
+      <CalendarGrid rooms={rooms} initialBookings={bookings} />
     </>
   )
 }

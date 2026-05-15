@@ -11,9 +11,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatMoney } from "@/lib/format"
-import { initialBookings, rooms } from "@/lib/mock-data"
+import { getBookings, getRooms } from "@/lib/data"
 
-export default function BookingsPage() {
+export const dynamic = "force-dynamic"
+
+export default async function BookingsPage() {
+  const [bookings, rooms] = await Promise.all([getBookings(), getRooms()])
+
   return (
     <>
       <PageHeader
@@ -36,7 +40,7 @@ export default function BookingsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {initialBookings.map((booking) => {
+              {bookings.map((booking) => {
                 const room = rooms.find((item) => item.id === booking.roomId)
 
                 return (
