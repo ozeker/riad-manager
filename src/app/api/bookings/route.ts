@@ -1,5 +1,18 @@
 import { NextResponse } from "next/server"
 
+import {
+  cleanText,
+  dateFromString,
+  integerValue,
+  isBookingSource,
+  isBookingStatus,
+  isCurrency,
+  isDateString,
+  isMissingRecordError,
+  jsonError,
+  optionalCleanText,
+  readJsonBody,
+} from "@/lib/api-validation"
 import { prisma } from "@/lib/prisma"
 import { serializeBooking } from "@/lib/data"
 
@@ -20,36 +33,56 @@ type BookingPayload = {
   notes?: string
 }
 
-function date(value: string) {
-  return new Date(`${value}T00:00:00.000Z`)
-}
-
 export async function POST(request: Request) {
-  const payload = (await request.json()) as BookingPayload
+  const body = await readJsonBody<BookingPayload>(request)
+  if (!body.ok) return body.response
 
+  const payload = body.data
+  const guestName = cleanText(payload.guestName)
+  const guests = integerValue(payload.guests) ?? 1
+  const amount = integerValue(payload.amount) ?? 0
   if (
-    (!payload.guestId && !payload.guestName) ||
+    (!payload.guestId && !guestName) ||
     !payload.roomId ||
-    !payload.checkIn ||
-    !payload.checkOut ||
-    !payload.source ||
-    !payload.currency ||
-    !payload.status
+    !isDateString(payload.checkIn) ||
+    !isDateString(payload.checkOut) ||
+    !isBookingSource(payload.source) ||
+    !isCurrency(payload.currency) ||
+    !isBookingStatus(payload.status)
   ) {
-    return NextResponse.json(
-      { message: "Missing required booking fields." },
-      { status: 400 }
-    )
+    return jsonError("Missing required booking fields.")
+  }
+
+  if (payload.checkIn >= payload.checkOut) {
+    return jsonError("Check-out must be after check-in.")
+  }
+
+  if (guests < 1 || amount < 0) {
+    return jsonError("Guests and amount must be valid numbers.")
+  }
+
+  const room = await prisma.room.findUnique({ where: { id: payload.roomId } })
+
+  if (!room) {
+    return jsonError("Room not found.", 404)
+  }
+
+  if (!room.active) {
+    return jsonError("Inactive rooms cannot receive new bookings.")
+  }
+
+  if (guests > room.capacity) {
+    return jsonError(`This room capacity is ${room.capacity} guests.`)
   }
 
   const guest = payload.guestId
     ? await prisma.guest.findUnique({ where: { id: payload.guestId } })
     : (await prisma.guest.findFirst({
-        where: { fullName: payload.guestName },
+        where: { fullName: guestName },
       })) ??
       (await prisma.guest.create({
         data: {
-          fullName: payload.guestName ?? "",
+          fullName: guestName,
           notes: "Created from booking form.",
         },
       }))
@@ -61,28 +94,36 @@ export async function POST(request: Request) {
   const data = {
     guestId: guest.id,
     roomId: payload.roomId,
-    checkIn: date(payload.checkIn),
-    checkOut: date(payload.checkOut),
-    guests: Number(payload.guests) || 1,
+    checkIn: dateFromString(payload.checkIn),
+    checkOut: dateFromString(payload.checkOut),
+    guests,
     source: payload.source,
-    amount: Number(payload.amount) || 0,
+    amount,
     currency: payload.currency,
     status: payload.status,
-    notes: payload.notes ?? "",
+    notes: optionalCleanText(payload.notes),
   }
 
-  const booking = payload.id
-    ? await prisma.booking.update({
-        where: { id: payload.id },
-        data,
-        include: { guest: true },
-      })
-    : await prisma.booking.create({
-        data,
-        include: { guest: true },
-      })
+  try {
+    const booking = payload.id
+      ? await prisma.booking.update({
+          where: { id: payload.id },
+          data,
+          include: { guest: true },
+        })
+      : await prisma.booking.create({
+          data,
+          include: { guest: true },
+        })
 
-  return NextResponse.json(serializeBooking(booking))
+    return NextResponse.json(serializeBooking(booking))
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("Booking not found.", 404)
+    }
+
+    throw error
+  }
 }
 
 export async function DELETE(request: Request) {
@@ -90,16 +131,24 @@ export async function DELETE(request: Request) {
   const id = searchParams.get("id")
 
   if (!id) {
-    return NextResponse.json({ message: "Booking id is required." }, { status: 400 })
+    return jsonError("Booking id is required.")
   }
 
-  await prisma.booking.update({
-    where: { id },
-    data: {
-      status: "cancelled",
-      deletedAt: new Date(),
-    },
-  })
+  try {
+    await prisma.booking.update({
+      where: { id },
+      data: {
+        status: "cancelled",
+        deletedAt: new Date(),
+      },
+    })
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("Booking not found.", 404)
+    }
+
+    throw error
+  }
 
   return NextResponse.json({ ok: true })
 }

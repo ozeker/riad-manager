@@ -2,6 +2,15 @@ import { randomUUID } from "crypto"
 
 import { NextResponse } from "next/server"
 
+import {
+  cleanText,
+  dateFromString,
+  integerValue,
+  isDateString,
+  isMissingRecordError,
+  jsonError,
+  readJsonBody,
+} from "@/lib/api-validation"
 import { serializeInvoice } from "@/lib/data"
 import { prisma } from "@/lib/prisma"
 
@@ -22,10 +31,6 @@ type InvoicePayload = {
   lines?: InvoiceLinePayload[]
 }
 
-function date(value: string) {
-  return new Date(`${value}T00:00:00.000Z`)
-}
-
 function invoiceId() {
   return `INV-DRAFT-${randomUUID().slice(0, 8).toUpperCase()}`
 }
@@ -33,9 +38,9 @@ function invoiceId() {
 function normalizeLines(lines: InvoiceLinePayload[] | undefined) {
   return (lines ?? [])
     .map((line) => {
-      const description = line.description?.trim() ?? ""
-      const quantity = Math.max(1, Math.round(Number(line.quantity) || 0))
-      const unitPrice = Math.max(0, Math.round(Number(line.unitPrice) || 0))
+      const description = cleanText(line.description)
+      const quantity = Math.max(1, integerValue(line.quantity) ?? 0)
+      const unitPrice = Math.max(0, integerValue(line.unitPrice) ?? 0)
 
       return {
         description,
@@ -48,13 +53,15 @@ function normalizeLines(lines: InvoiceLinePayload[] | undefined) {
 }
 
 export async function POST(request: Request) {
-  const payload = (await request.json()) as InvoicePayload
+  const body = await readJsonBody<InvoicePayload>(request)
+  if (!body.ok) return body.response
+
+  const payload = body.data
   const lines = normalizeLines(payload.lines)
 
-  if (!payload.bookingId || !payload.issueDate || lines.length === 0) {
-    return NextResponse.json(
-      { message: "Booking, issue date, and at least one invoice line are required." },
-      { status: 400 }
+  if (!payload.bookingId || !isDateString(payload.issueDate) || lines.length === 0) {
+    return jsonError(
+      "Booking, issue date, and at least one invoice line are required."
     )
   }
 
@@ -81,45 +88,53 @@ export async function POST(request: Request) {
   const data = {
     bookingId: payload.bookingId,
     status: "draft",
-    issueDate: date(payload.issueDate),
+    issueDate: dateFromString(payload.issueDate),
     total,
     currency: booking.currency,
   }
 
-  const invoice = await prisma.$transaction(async (tx) => {
-    const savedInvoice = payload.id
-      ? await tx.invoice.update({
-          where: { id: payload.id },
-          data,
-        })
-      : await tx.invoice.create({
-          data: {
-            id: invoiceId(),
-            ...data,
-          },
-        })
+  try {
+    const invoice = await prisma.$transaction(async (tx) => {
+      const savedInvoice = payload.id
+        ? await tx.invoice.update({
+            where: { id: payload.id },
+            data,
+          })
+        : await tx.invoice.create({
+            data: {
+              id: invoiceId(),
+              ...data,
+            },
+          })
 
-    await tx.invoiceLine.deleteMany({
-      where: { invoiceId: savedInvoice.id },
+      await tx.invoiceLine.deleteMany({
+        where: { invoiceId: savedInvoice.id },
+      })
+
+      await tx.invoiceLine.createMany({
+        data: lines.map((line) => ({
+          invoiceId: savedInvoice.id,
+          ...line,
+        })),
+      })
+
+      return tx.invoice.findUniqueOrThrow({
+        where: { id: savedInvoice.id },
+        include: {
+          booking: { include: { guest: true, room: true } },
+          lines: { orderBy: { createdAt: "asc" } },
+        },
+      })
     })
 
-    await tx.invoiceLine.createMany({
-      data: lines.map((line) => ({
-        invoiceId: savedInvoice.id,
-        ...line,
-      })),
-    })
+    return NextResponse.json(serializeInvoice(invoice))
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("Invoice not found.", 404)
+    }
 
-    return tx.invoice.findUniqueOrThrow({
-      where: { id: savedInvoice.id },
-      include: {
-        booking: { include: { guest: true, room: true } },
-        lines: { orderBy: { createdAt: "asc" } },
-      },
-    })
-  })
-
-  return NextResponse.json(serializeInvoice(invoice))
+    throw error
+  }
 }
 
 export async function DELETE(request: Request) {
@@ -127,16 +142,21 @@ export async function DELETE(request: Request) {
   const id = searchParams.get("id")
 
   if (!id) {
-    return NextResponse.json(
-      { message: "Invoice id is required." },
-      { status: 400 }
-    )
+    return jsonError("Invoice id is required.")
   }
 
-  await prisma.$transaction([
-    prisma.invoiceLine.deleteMany({ where: { invoiceId: id } }),
-    prisma.invoice.delete({ where: { id } }),
-  ])
+  try {
+    await prisma.$transaction([
+      prisma.invoiceLine.deleteMany({ where: { invoiceId: id } }),
+      prisma.invoice.delete({ where: { id } }),
+    ])
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("Invoice not found.", 404)
+    }
+
+    throw error
+  }
 
   return NextResponse.json({ ok: true })
 }

@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server"
 
+import {
+  cleanText,
+  integerValue,
+  isMissingRecordError,
+  jsonError,
+  readJsonBody,
+} from "@/lib/api-validation"
 import { prisma } from "@/lib/prisma"
 
 export const runtime = "nodejs"
@@ -39,48 +46,56 @@ function serializeRoom(room: {
 }
 
 export async function POST(request: Request) {
-  const payload = (await request.json()) as RoomPayload
-  const name = payload.name?.trim()
-  const capacity = Number(payload.capacity)
-  const rateMad = Number(payload.rates?.MAD)
-  const rateEur = Number(payload.rates?.EUR)
-  const rateUsd = Number(payload.rates?.USD)
+  const body = await readJsonBody<RoomPayload>(request)
+  if (!body.ok) return body.response
+
+  const payload = body.data
+  const name = cleanText(payload.name)
+  const capacity = integerValue(payload.capacity)
+  const rateMad = integerValue(payload.rates?.MAD)
+  const rateEur = integerValue(payload.rates?.EUR)
+  const rateUsd = integerValue(payload.rates?.USD)
 
   if (!name) {
-    return NextResponse.json({ message: "Room name is required." }, { status: 400 })
+    return jsonError("Room name is required.")
   }
 
   if (
-    !Number.isFinite(capacity) ||
+    capacity === null ||
     capacity < 1 ||
-    !Number.isFinite(rateMad) ||
+    rateMad === null ||
     rateMad < 0 ||
-    !Number.isFinite(rateEur) ||
+    rateEur === null ||
     rateEur < 0 ||
-    !Number.isFinite(rateUsd) ||
+    rateUsd === null ||
     rateUsd < 0
   ) {
-    return NextResponse.json(
-      { message: "Capacity and rates must be valid numbers." },
-      { status: 400 }
-    )
+    return jsonError("Capacity and rates must be valid numbers.")
   }
 
   const data = {
     name,
-    capacity: Math.round(capacity),
-    rateMad: Math.round(rateMad),
-    rateEur: Math.round(rateEur),
-    rateUsd: Math.round(rateUsd),
+    capacity,
+    rateMad,
+    rateEur,
+    rateUsd,
     active: payload.active ?? true,
   }
 
-  const room = payload.id
-    ? await prisma.room.update({
-        where: { id: payload.id },
-        data,
-      })
-    : await prisma.room.create({ data })
+  try {
+    const room = payload.id
+      ? await prisma.room.update({
+          where: { id: payload.id },
+          data,
+        })
+      : await prisma.room.create({ data })
 
-  return NextResponse.json(serializeRoom(room))
+    return NextResponse.json(serializeRoom(room))
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("Room not found.", 404)
+    }
+
+    throw error
+  }
 }

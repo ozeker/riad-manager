@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server"
 
+import {
+  cleanText,
+  isHttpUrl,
+  isIcalSource,
+  isMissingRecordError,
+  jsonError,
+  readJsonBody,
+} from "@/lib/api-validation"
 import { serializeIcalFeed } from "@/lib/data"
 import { prisma } from "@/lib/prisma"
 import type { IcalFeed } from "@/lib/types"
@@ -15,39 +23,28 @@ type IcalFeedPayload = {
   active?: boolean
 }
 
-const sources: IcalFeed["source"][] = [
-  "Booking.com",
-  "Airbnb",
-  "HotelRunner",
-  "Other",
-]
-
-function isValidUrl(value: string) {
-  try {
-    const url = new URL(value)
-    return url.protocol === "http:" || url.protocol === "https:"
-  } catch {
-    return false
-  }
-}
-
 export async function POST(request: Request) {
-  const payload = (await request.json()) as IcalFeedPayload
-  const name = payload.name?.trim()
-  const url = payload.url?.trim()
+  const body = await readJsonBody<IcalFeedPayload>(request)
+  if (!body.ok) return body.response
 
-  if (!name || !payload.source || !sources.includes(payload.source) || !url) {
-    return NextResponse.json(
-      { message: "Name, source, and URL are required." },
-      { status: 400 }
-    )
+  const payload = body.data
+  const name = cleanText(payload.name)
+  const url = cleanText(payload.url)
+
+  if (!name || !isIcalSource(payload.source) || !url) {
+    return jsonError("Name, source, and URL are required.")
   }
 
-  if (!isValidUrl(url)) {
-    return NextResponse.json(
-      { message: "Enter a valid http or https iCal URL." },
-      { status: 400 }
-    )
+  if (!isHttpUrl(url)) {
+    return jsonError("Enter a valid http or https iCal URL.")
+  }
+
+  if (payload.roomId) {
+    const room = await prisma.room.findUnique({ where: { id: payload.roomId } })
+
+    if (!room) {
+      return jsonError("Room not found.", 404)
+    }
   }
 
   const data = {
@@ -58,12 +55,21 @@ export async function POST(request: Request) {
     active: payload.active ?? true,
   }
 
-  const feed = payload.id
-    ? await prisma.icalFeed.update({
-        where: { id: payload.id },
-        data,
-      })
-    : await prisma.icalFeed.create({ data })
+  let feed: { id: string }
+  try {
+    feed = payload.id
+      ? await prisma.icalFeed.update({
+          where: { id: payload.id },
+          data,
+        })
+      : await prisma.icalFeed.create({ data })
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("iCal feed not found.", 404)
+    }
+
+    throw error
+  }
 
   const savedFeed = await prisma.icalFeed.findUniqueOrThrow({
     where: { id: feed.id },
@@ -78,13 +84,18 @@ export async function DELETE(request: Request) {
   const id = searchParams.get("id")
 
   if (!id) {
-    return NextResponse.json(
-      { message: "iCal feed id is required." },
-      { status: 400 }
-    )
+    return jsonError("iCal feed id is required.")
   }
 
-  await prisma.icalFeed.delete({ where: { id } })
+  try {
+    await prisma.icalFeed.delete({ where: { id } })
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("iCal feed not found.", 404)
+    }
+
+    throw error
+  }
 
   return NextResponse.json({ ok: true })
 }

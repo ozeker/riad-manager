@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server"
 
+import {
+  cleanText,
+  isMissingRecordError,
+  jsonError,
+  optionalCleanText,
+  readJsonBody,
+} from "@/lib/api-validation"
 import { prisma } from "@/lib/prisma"
 
 export const runtime = "nodejs"
@@ -35,28 +42,39 @@ function serializeGuest(guest: {
 }
 
 export async function POST(request: Request) {
-  const payload = (await request.json()) as GuestPayload
-  const fullName = payload.fullName?.trim()
+  const body = await readJsonBody<GuestPayload>(request)
+  if (!body.ok) return body.response
+
+  const payload = body.data
+  const fullName = cleanText(payload.fullName)
 
   if (!fullName) {
-    return NextResponse.json({ message: "Guest name is required." }, { status: 400 })
+    return jsonError("Guest name is required.")
   }
 
   const data = {
     fullName,
-    phone: payload.phone?.trim() || null,
-    email: payload.email?.trim() || null,
-    nationality: payload.nationality?.trim() || null,
-    documentNumber: payload.documentNumber?.trim() || null,
-    notes: payload.notes?.trim() || null,
+    phone: optionalCleanText(payload.phone),
+    email: optionalCleanText(payload.email),
+    nationality: optionalCleanText(payload.nationality),
+    documentNumber: optionalCleanText(payload.documentNumber),
+    notes: optionalCleanText(payload.notes),
   }
 
-  const guest = payload.id
-    ? await prisma.guest.update({
-        where: { id: payload.id },
-        data,
-      })
-    : await prisma.guest.create({ data })
+  try {
+    const guest = payload.id
+      ? await prisma.guest.update({
+          where: { id: payload.id },
+          data,
+        })
+      : await prisma.guest.create({ data })
 
-  return NextResponse.json(serializeGuest(guest))
+    return NextResponse.json(serializeGuest(guest))
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("Guest not found.", 404)
+    }
+
+    throw error
+  }
 }

@@ -1,5 +1,16 @@
 import { NextResponse } from "next/server"
 
+import {
+  dateFromString,
+  integerValue,
+  isCurrency,
+  isDateString,
+  isMissingRecordError,
+  isPaymentMethod,
+  jsonError,
+  optionalCleanText,
+  readJsonBody,
+} from "@/lib/api-validation"
 import { serializePayment } from "@/lib/data"
 import { prisma } from "@/lib/prisma"
 
@@ -15,26 +26,22 @@ type PaymentPayload = {
   notes?: string
 }
 
-function date(value: string) {
-  return new Date(`${value}T00:00:00.000Z`)
-}
-
 export async function POST(request: Request) {
-  const payload = (await request.json()) as PaymentPayload
-  const amount = Number(payload.amount)
+  const body = await readJsonBody<PaymentPayload>(request)
+  if (!body.ok) return body.response
+
+  const payload = body.data
+  const amount = integerValue(payload.amount)
 
   if (
     !payload.bookingId ||
-    !payload.currency ||
-    !payload.method ||
-    !payload.paymentDate ||
-    !Number.isFinite(amount) ||
+    !isCurrency(payload.currency) ||
+    !isPaymentMethod(payload.method) ||
+    !isDateString(payload.paymentDate) ||
+    amount === null ||
     amount <= 0
   ) {
-    return NextResponse.json(
-      { message: "Booking, amount, currency, method, and date are required." },
-      { status: 400 }
-    )
+    return jsonError("Booking, amount, currency, method, and date are required.")
   }
 
   const booking = await prisma.booking.findUnique({
@@ -47,25 +54,33 @@ export async function POST(request: Request) {
 
   const data = {
     bookingId: payload.bookingId,
-    amount: Math.round(amount),
+    amount,
     currency: payload.currency,
     method: payload.method,
-    paymentDate: date(payload.paymentDate),
-    notes: payload.notes?.trim() || null,
+    paymentDate: dateFromString(payload.paymentDate),
+    notes: optionalCleanText(payload.notes),
   }
 
-  const payment = payload.id
-    ? await prisma.payment.update({
-        where: { id: payload.id },
-        data,
-        include: { booking: { include: { guest: true } } },
-      })
-    : await prisma.payment.create({
-        data,
-        include: { booking: { include: { guest: true } } },
-      })
+  try {
+    const payment = payload.id
+      ? await prisma.payment.update({
+          where: { id: payload.id },
+          data,
+          include: { booking: { include: { guest: true } } },
+        })
+      : await prisma.payment.create({
+          data,
+          include: { booking: { include: { guest: true } } },
+        })
 
-  return NextResponse.json(serializePayment(payment))
+    return NextResponse.json(serializePayment(payment))
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("Payment not found.", 404)
+    }
+
+    throw error
+  }
 }
 
 export async function DELETE(request: Request) {
@@ -73,10 +88,18 @@ export async function DELETE(request: Request) {
   const id = searchParams.get("id")
 
   if (!id) {
-    return NextResponse.json({ message: "Payment id is required." }, { status: 400 })
+    return jsonError("Payment id is required.")
   }
 
-  await prisma.payment.delete({ where: { id } })
+  try {
+    await prisma.payment.delete({ where: { id } })
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("Payment not found.", 404)
+    }
+
+    throw error
+  }
 
   return NextResponse.json({ ok: true })
 }

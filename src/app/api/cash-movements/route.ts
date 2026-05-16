@@ -1,5 +1,16 @@
 import { NextResponse } from "next/server"
 
+import {
+  cleanText,
+  dateFromString,
+  integerValue,
+  isCashMovementType,
+  isDateString,
+  isMissingRecordError,
+  jsonError,
+  optionalCleanText,
+  readJsonBody,
+} from "@/lib/api-validation"
 import { serializeCashMovement } from "@/lib/data"
 import { prisma } from "@/lib/prisma"
 import type { CashMovement } from "@/lib/types"
@@ -15,53 +26,49 @@ type CashMovementPayload = {
   notes?: string
 }
 
-const movementTypes: CashMovement["type"][] = [
-  "opening balance",
-  "cash in",
-  "cash out",
-  "closing balance",
-]
-
-function date(value: string) {
-  return new Date(`${value}T00:00:00.000Z`)
-}
-
 export async function POST(request: Request) {
-  const payload = (await request.json()) as CashMovementPayload
-  const amount = Number(payload.amount)
-  const category = payload.category?.trim()
+  const body = await readJsonBody<CashMovementPayload>(request)
+  if (!body.ok) return body.response
+
+  const payload = body.data
+  const amount = integerValue(payload.amount)
+  const category = cleanText(payload.category)
 
   if (
-    !payload.date ||
-    !payload.type ||
-    !movementTypes.includes(payload.type) ||
+    !isDateString(payload.date) ||
+    !isCashMovementType(payload.type) ||
     !category ||
-    !Number.isFinite(amount) ||
+    amount === null ||
     amount < 0
   ) {
-    return NextResponse.json(
-      { message: "Date, type, category, and amount are required." },
-      { status: 400 }
-    )
+    return jsonError("Date, type, category, and amount are required.")
   }
 
   const data = {
-    date: date(payload.date),
+    date: dateFromString(payload.date),
     type: payload.type,
     category,
-    amount: Math.round(amount),
+    amount,
     currency: "MAD",
-    notes: payload.notes?.trim() || null,
+    notes: optionalCleanText(payload.notes),
   }
 
-  const movement = payload.id
-    ? await prisma.cashMovement.update({
-        where: { id: payload.id },
-        data,
-      })
-    : await prisma.cashMovement.create({ data })
+  try {
+    const movement = payload.id
+      ? await prisma.cashMovement.update({
+          where: { id: payload.id },
+          data,
+        })
+      : await prisma.cashMovement.create({ data })
 
-  return NextResponse.json(serializeCashMovement(movement))
+    return NextResponse.json(serializeCashMovement(movement))
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("Cash movement not found.", 404)
+    }
+
+    throw error
+  }
 }
 
 export async function DELETE(request: Request) {
@@ -69,13 +76,18 @@ export async function DELETE(request: Request) {
   const id = searchParams.get("id")
 
   if (!id) {
-    return NextResponse.json(
-      { message: "Cash movement id is required." },
-      { status: 400 }
-    )
+    return jsonError("Cash movement id is required.")
   }
 
-  await prisma.cashMovement.delete({ where: { id } })
+  try {
+    await prisma.cashMovement.delete({ where: { id } })
+  } catch (error) {
+    if (isMissingRecordError(error)) {
+      return jsonError("Cash movement not found.", 404)
+    }
+
+    throw error
+  }
 
   return NextResponse.json({ ok: true })
 }
