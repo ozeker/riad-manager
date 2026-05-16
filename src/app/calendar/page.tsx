@@ -19,7 +19,11 @@ export default async function CalendarPage() {
         title="Calendar"
         description="Click an empty cell to create a booking, or click an existing block to edit it."
         badge="Mock data"
-        action={<Button variant="outline">Import iCal later</Button>}
+        action={
+          <Button asChild variant="outline">
+            <a href="/settings">Manage iCal feeds</a>
+          </Button>
+        }
       />
       <CalendarGrid rooms={rooms} initialBookings={bookings} guests={guests} />
     </>

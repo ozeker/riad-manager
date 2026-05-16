@@ -4,6 +4,7 @@ import type {
   CashMovement,
   Currency,
   Guest,
+  IcalFeed,
   Invoice,
   Payment,
   Room,
@@ -43,6 +44,15 @@ type CashMovementRow = {
   amount: number
   currency: string
   notes: string | null
+}
+
+type IcalFeedRow = {
+  id: string
+  name: string
+  source: string
+  url: string
+  active: boolean
+  lastSyncedAt: Date | null
 }
 
 type InvoiceWithBooking = {
@@ -110,6 +120,17 @@ export function serializeCashMovement(movement: CashMovementRow): CashMovement {
     amount: movement.amount,
     currency: "MAD",
     notes: movement.notes ?? "",
+  }
+}
+
+export function serializeIcalFeed(feed: IcalFeedRow): IcalFeed {
+  return {
+    id: feed.id,
+    name: feed.name,
+    source: feed.source as IcalFeed["source"],
+    url: feed.url,
+    active: feed.active,
+    lastSyncedAt: feed.lastSyncedAt ? feed.lastSyncedAt.toISOString() : "",
   }
 }
 
@@ -199,6 +220,14 @@ export async function getCashMovements(): Promise<CashMovement[]> {
   })
 
   return rows.map(serializeCashMovement)
+}
+
+export async function getIcalFeeds(): Promise<IcalFeed[]> {
+  const rows = await prisma.icalFeed.findMany({
+    orderBy: { createdAt: "asc" },
+  })
+
+  return rows.map(serializeIcalFeed)
 }
 
 export async function getInvoices(): Promise<Invoice[]> {

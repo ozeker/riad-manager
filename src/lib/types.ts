@@ -71,6 +71,15 @@ export type CashMovement = {
   notes: string
 }
 
+export type IcalFeed = {
+  id: string
+  name: string
+  source: "Booking.com" | "Airbnb" | "HotelRunner" | "Other"
+  url: string
+  active: boolean
+  lastSyncedAt: string
+}
+
 export type InvoiceLine = {
   id: string
   description: string

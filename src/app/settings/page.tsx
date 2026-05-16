@@ -1,13 +1,18 @@
 import { PageHeader } from "@/components/layout/page-header"
+import { IcalFeedManager } from "@/components/settings/ical-feed-manager"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RoomManager } from "@/components/settings/room-manager"
 import { Separator } from "@/components/ui/separator"
-import { getProperty, getRooms } from "@/lib/data"
+import { getIcalFeeds, getProperty, getRooms } from "@/lib/data"
 
 export const dynamic = "force-dynamic"
 
 export default async function SettingsPage() {
-  const [property, rooms] = await Promise.all([getProperty(), getRooms()])
+  const [property, rooms, feeds] = await Promise.all([
+    getProperty(),
+    getRooms(),
+    getIcalFeeds(),
+  ])
 
   return (
     <>
@@ -49,6 +54,9 @@ export default async function SettingsPage() {
         </Card>
 
         <RoomManager rooms={rooms} />
+        <div className="xl:col-span-2">
+          <IcalFeedManager feeds={feeds} />
+        </div>
       </div>
     </>
   )
