@@ -89,3 +89,4 @@ Project planning documents live in `docs/`:
 - `docs/SAMPLE_DATA.md`
 - `docs/CODEX_PROMPTS.md`
 - `docs/DEPLOYMENT.md`
+- `docs/PRODUCTION_MVP_CHECKLIST.md`
