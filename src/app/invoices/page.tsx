@@ -18,7 +18,7 @@ export default async function InvoicesPage() {
       <PageHeader
         eyebrow="Documents"
         title="Invoices"
-        description="Create editable invoice drafts from bookings. PDF generation comes later."
+        description="Create invoice drafts, generate PDFs, and finalize locked invoice numbers."
         action={<ExportCsvButton dataset="invoices" />}
       />
       <InvoiceManager

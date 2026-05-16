@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Riad Manager",
-  description: "Internal management prototype for a small Moroccan riad",
+  description: "Internal management app for a small Moroccan riad",
 };
 
 export default function RootLayout({
