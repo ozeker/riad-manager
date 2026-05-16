@@ -40,7 +40,9 @@ export async function GET(request: Request) {
 
   const pdfBytes = await createInvoiceDraftPdf({
     id: invoice.id,
+    finalNumber: invoice.finalNumber,
     status: invoice.status,
+    finalizedAt: invoice.finalizedAt,
     issueDate: invoice.issueDate,
     total: invoice.total,
     currency: invoice.currency,
@@ -74,7 +76,7 @@ export async function GET(request: Request) {
 
   return new NextResponse(Buffer.from(pdfBytes), {
     headers: {
-      "Content-Disposition": `attachment; filename="${invoice.id}-draft.pdf"`,
+      "Content-Disposition": `attachment; filename="${invoice.finalNumber ?? invoice.id}.pdf"`,
       "Content-Type": "application/pdf",
       "Cache-Control": "no-store",
     },

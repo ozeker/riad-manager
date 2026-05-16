@@ -66,6 +66,7 @@ type IcalFeedRow = {
 
 type InvoiceWithBooking = {
   id: string
+  finalNumber: string | null
   bookingId: string
   booking: {
     guest: { fullName: string }
@@ -74,6 +75,7 @@ type InvoiceWithBooking = {
     checkOut: Date
   }
   status: string
+  finalizedAt: Date | null
   issueDate: Date
   total: number
   currency: string
@@ -167,6 +169,7 @@ export function serializeIcalFeed(feed: IcalFeedRow): IcalFeed {
 export function serializeInvoice(invoice: InvoiceWithBooking): Invoice {
   return {
     id: invoice.id,
+    finalNumber: invoice.finalNumber ?? "",
     bookingId: invoice.bookingId,
     guestName: invoice.booking.guest.fullName,
     roomName: invoice.booking.room.name,
@@ -176,6 +179,7 @@ export function serializeInvoice(invoice: InvoiceWithBooking): Invoice {
     total: invoice.total,
     currency: invoice.currency as Currency,
     issueDate: dateString(invoice.issueDate),
+    finalizedAt: invoice.finalizedAt ? invoice.finalizedAt.toISOString() : "",
     lines: invoice.lines.map((line) => ({
       id: line.id,
       description: line.description,

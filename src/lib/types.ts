@@ -111,6 +111,7 @@ export type InvoiceLine = {
 
 export type Invoice = {
   id: string
+  finalNumber: string
   bookingId: string
   guestName: string
   roomName: string
@@ -120,5 +121,6 @@ export type Invoice = {
   total: number
   currency: Currency
   issueDate: string
+  finalizedAt: string
   lines: InvoiceLine[]
 }

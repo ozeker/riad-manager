@@ -3,8 +3,10 @@
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
+  CheckCircle2,
   Download,
   FileText,
+  LockKeyhole,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -177,6 +179,7 @@ export function InvoiceManager({
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [finalizingId, setFinalizingId] = useState<string | null>(null)
 
   const invoiceBookingIds = useMemo(
     () => new Set(invoices.map((invoice) => invoice.bookingId)),
@@ -191,6 +194,12 @@ export function InvoiceManager({
     [bookings]
   )
   const totals = useMemo(() => getTotalsByCurrency(invoices), [invoices])
+  const draftInvoiceCount = invoices.filter(
+    (invoice) => invoice.status === "draft"
+  ).length
+  const finalInvoiceCount = invoices.filter(
+    (invoice) => invoice.status === "final"
+  ).length
   const draftCurrency = getInvoiceCurrency(draft, bookings)
   const draftTotal = getInvoiceTotal(draft.lines)
 
@@ -200,6 +209,11 @@ export function InvoiceManager({
   }
 
   function openEdit(invoice: Invoice) {
+    if (invoice.status === "final") {
+      toast.info("Final invoices are locked.")
+      return
+    }
+
     setDraft({
       id: invoice.id,
       bookingId: invoice.bookingId,
@@ -297,7 +311,8 @@ export function InvoiceManager({
       })
 
       if (!response.ok) {
-        throw new Error("Could not save invoice.")
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.message ?? "Could not save invoice.")
       }
 
       const savedInvoice = (await response.json()) as Invoice
@@ -316,14 +331,23 @@ export function InvoiceManager({
       toast.success(draft.id ? "Invoice draft updated" : "Invoice draft created")
       setOpen(false)
       router.refresh()
-    } catch {
-      toast.error("The invoice draft could not be saved.")
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "The invoice draft could not be saved."
+      )
     } finally {
       setSaving(false)
     }
   }
 
   async function deleteInvoice(invoice: Invoice) {
+    if (invoice.status === "final") {
+      toast.error("Final invoices cannot be deleted.")
+      return
+    }
+
     setDeletingId(invoice.id)
     try {
       const response = await fetch(`/api/invoices?id=${invoice.id}`, {
@@ -331,7 +355,8 @@ export function InvoiceManager({
       })
 
       if (!response.ok) {
-        throw new Error("Could not delete invoice.")
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.message ?? "Could not delete invoice.")
       }
 
       setInvoices((current) =>
@@ -339,16 +364,58 @@ export function InvoiceManager({
       )
       toast.success("Invoice draft deleted")
       router.refresh()
-    } catch {
-      toast.error("The invoice draft could not be deleted.")
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "The invoice draft could not be deleted."
+      )
     } finally {
       setDeletingId(null)
     }
   }
 
+  async function finalizeInvoice(invoice: Invoice) {
+    setFinalizingId(invoice.id)
+
+    try {
+      const response = await fetch("/api/invoices", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: invoice.id }),
+      })
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.message ?? "Could not finalize invoice.")
+      }
+
+      const finalizedInvoice = (await response.json()) as Invoice
+      setInvoices((current) =>
+        current.map((item) =>
+          item.id === finalizedInvoice.id ? finalizedInvoice : item
+        )
+      )
+      toast.success(
+        `Invoice finalized as ${finalizedInvoice.finalNumber || finalizedInvoice.id}`
+      )
+      router.refresh()
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "The invoice could not be finalized."
+      )
+    } finally {
+      setFinalizingId(null)
+    }
+  }
+
   return (
     <>
-      <div className="mb-4 grid gap-4 md:grid-cols-4">
+      <div className="mb-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card className="rounded-lg border-border/80 shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
@@ -357,7 +424,19 @@ export function InvoiceManager({
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold tracking-tight">
-              {invoices.length}
+              {draftInvoiceCount}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="rounded-lg border-border/80 shadow-none">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">
+              Final invoices
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold tracking-tight">
+              {finalInvoiceCount}
             </p>
           </CardContent>
         </Card>
@@ -401,7 +480,9 @@ export function InvoiceManager({
             <TableBody>
               {invoices.map((invoice) => (
                 <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.id}</TableCell>
+                  <TableCell className="font-medium">
+                    {invoice.finalNumber || invoice.id}
+                  </TableCell>
                   <TableCell>
                     <div className="font-medium">{invoice.guestName}</div>
                     <div className="text-xs text-muted-foreground">
@@ -412,7 +493,15 @@ export function InvoiceManager({
                     {invoice.checkIn} to {invoice.checkOut}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{invoice.status}</Badge>
+                    <Badge
+                      variant={invoice.status === "final" ? "default" : "secondary"}
+                      className="gap-1"
+                    >
+                      {invoice.status === "final" ? (
+                        <LockKeyhole className="size-3" />
+                      ) : null}
+                      {invoice.status}
+                    </Badge>
                   </TableCell>
                   <TableCell>{invoice.issueDate}</TableCell>
                   <TableCell className="text-right">
@@ -432,17 +521,35 @@ export function InvoiceManager({
                         <DropdownMenuItem asChild>
                           <a href={`/api/invoices/pdf?id=${invoice.id}`}>
                             <Download className="size-4" />
-                            Draft PDF
+                            Invoice PDF
                           </a>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openEdit(invoice)}>
+                        <DropdownMenuItem
+                          onClick={() => openEdit(invoice)}
+                          disabled={invoice.status === "final"}
+                        >
                           <Pencil className="size-4" />
                           Edit draft
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => finalizeInvoice(invoice)}
+                          disabled={
+                            invoice.status === "final" ||
+                            finalizingId === invoice.id
+                          }
+                        >
+                          <CheckCircle2 className="size-4" />
+                          {finalizingId === invoice.id
+                            ? "Finalizing..."
+                            : "Finalize"}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => deleteInvoice(invoice)}
-                          disabled={deletingId === invoice.id}
+                          disabled={
+                            deletingId === invoice.id ||
+                            invoice.status === "final"
+                          }
                         >
                           <Trash2 className="size-4" />
                           {deletingId === invoice.id ? "Deleting..." : "Delete"}
@@ -476,7 +583,7 @@ export function InvoiceManager({
             </DialogTitle>
             <DialogDescription>
               Drafts stay editable. PDF generation and final invoice numbering
-              come in a later step.
+              are available from the invoice actions menu.
             </DialogDescription>
           </DialogHeader>
 

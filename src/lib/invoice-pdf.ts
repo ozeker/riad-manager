@@ -9,7 +9,9 @@ type InvoicePdfLine = {
 
 type InvoicePdfData = {
   id: string
+  finalNumber: string | null
   status: string
+  finalizedAt: Date | null
   issueDate: Date
   total: number
   currency: string
@@ -122,11 +124,15 @@ export async function createInvoiceDraftPdf(invoice: InvoicePdfData) {
     })
   }
 
+  const invoiceTitle =
+    invoice.status === "final" ? "FINAL INVOICE" : "DRAFT INVOICE"
+  const invoiceNumber = invoice.finalNumber ?? invoice.id
+
   drawText(invoice.property.name, margin, y, { size: 20, bold: true })
-  drawText("DRAFT INVOICE", pageWidth - 185, y + 2, {
+  drawText(invoiceTitle, pageWidth - 185, y + 2, {
     size: 15,
     bold: true,
-    color: rgb(0.72, 0.16, 0.16),
+    color: invoice.status === "final" ? rgb(0.12, 0.14, 0.17) : rgb(0.72, 0.16, 0.16),
   })
   y -= 18
   drawText(invoice.property.legalName, margin, y, { size: 10 })
@@ -144,7 +150,7 @@ export async function createInvoiceDraftPdf(invoice: InvoicePdfData) {
   drawText("Invoice", margin, y, { size: 12, bold: true })
   drawText("Guest", 330, y, { size: 12, bold: true })
   y -= 17
-  drawText(`Number: ${invoice.id}`, margin, y)
+  drawText(`Number: ${invoiceNumber}`, margin, y)
   drawText(invoice.booking.guest.fullName, 330, y, { bold: true })
   y -= 14
   drawText(`Issue date: ${formatDate(invoice.issueDate)}`, margin, y)
@@ -153,6 +159,10 @@ export async function createInvoiceDraftPdf(invoice: InvoicePdfData) {
   drawText(`Status: ${invoice.status}`, margin, y)
   drawText(`Email: ${invoice.booking.guest.email || "-"}`, 330, y)
   y -= 14
+  if (invoice.finalizedAt) {
+    drawText(`Finalized: ${formatDate(invoice.finalizedAt)}`, margin, y)
+    y -= 14
+  }
   drawText(`Source: ${invoice.booking.source}`, margin, y)
   drawText(`Nationality: ${invoice.booking.guest.nationality || "-"}`, 330, y)
   y -= 14
@@ -211,12 +221,21 @@ export async function createInvoiceDraftPdf(invoice: InvoicePdfData) {
     { size: 9, color: rgb(0.35, 0.38, 0.44), maxWidth: pageWidth - margin * 2 }
   )
   y -= 18
-  drawText(
-    "This is a draft invoice for review only. It is not finalized and has no legal invoice sequence yet.",
-    margin,
-    y,
-    { size: 9, color: rgb(0.72, 0.16, 0.16), maxWidth: pageWidth - margin * 2 }
-  )
+  if (invoice.status !== "final") {
+    drawText(
+      "This is a draft invoice for review only. It is not finalized and has no legal invoice sequence yet.",
+      margin,
+      y,
+      { size: 9, color: rgb(0.72, 0.16, 0.16), maxWidth: pageWidth - margin * 2 }
+    )
+  } else {
+    drawText(
+      "This invoice has been finalized. Further edits are locked in Riad Manager.",
+      margin,
+      y,
+      { size: 9, color: rgb(0.35, 0.38, 0.44), maxWidth: pageWidth - margin * 2 }
+    )
+  }
 
   return pdf.save()
 }

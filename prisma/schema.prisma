@@ -120,11 +120,13 @@ model Invoice {
   bookingId String  @unique
   booking   Booking @relation(fields: [bookingId], references: [id])
 
-  status    String
-  issueDate DateTime
-  total     Int
-  currency  String
-  lines     InvoiceLine[]
+  status      String
+  finalNumber String? @unique
+  finalizedAt DateTime?
+  issueDate   DateTime
+  total       Int
+  currency    String
+  lines       InvoiceLine[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

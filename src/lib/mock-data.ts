@@ -253,6 +253,7 @@ export const cashMovements: CashMovement[] = [
 export const invoices: Invoice[] = [
   {
     id: "INV-DRAFT-001",
+    finalNumber: "",
     bookingId: "booking-4",
     guestName: "Emily Carter",
     roomName: "Terrace Room",
@@ -262,6 +263,7 @@ export const invoices: Invoice[] = [
     total: 2400,
     currency: "MAD",
     issueDate: "2026-06-07",
+    finalizedAt: "",
     lines: [
       {
         id: "invoice-line-1",
@@ -274,6 +276,7 @@ export const invoices: Invoice[] = [
   },
   {
     id: "INV-DRAFT-002",
+    finalNumber: "",
     bookingId: "booking-3",
     guestName: "Ahmed Benali",
     roomName: "Medina Room",
@@ -283,6 +286,7 @@ export const invoices: Invoice[] = [
     total: 2000,
     currency: "MAD",
     issueDate: "2026-06-05",
+    finalizedAt: "",
     lines: [
       {
         id: "invoice-line-2",
