@@ -107,7 +107,8 @@ export function BookingManager({
     })
 
     if (!response.ok) {
-      throw new Error("Could not save booking.")
+      const body = await response.json().catch(() => null)
+      throw new Error(body?.message ?? "Could not save booking.")
     }
 
     const savedBooking = (await response.json()) as Booking
@@ -258,6 +259,7 @@ export function BookingManager({
         booking={selectedBooking}
         rooms={modalRooms}
         guests={guests}
+        existingBookings={bookings}
         onOpenChange={closeModal}
         onSave={saveBooking}
         onCancelBooking={cancelBooking}

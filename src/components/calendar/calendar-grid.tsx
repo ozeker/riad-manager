@@ -108,7 +108,8 @@ export function CalendarGrid({
     })
 
     if (!response.ok) {
-      throw new Error("Could not save booking.")
+      const body = await response.json().catch(() => null)
+      throw new Error(body?.message ?? "Could not save booking.")
     }
 
     const savedBooking = (await response.json()) as Booking
@@ -305,6 +306,7 @@ export function CalendarGrid({
         initialDate={draftCell?.date}
         rooms={rooms}
         guests={guests}
+        existingBookings={bookings}
         onOpenChange={closeModal}
         onSave={handleSave}
         onCancelBooking={handleCancelBooking}

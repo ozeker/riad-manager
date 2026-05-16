@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { differenceInCalendarDays, parseISO } from "date-fns"
-import { Archive, Ban } from "lucide-react"
+import { AlertTriangle, Archive, Ban } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { findBookingAvailabilityConflict } from "@/lib/booking-availability"
 import type {
   Booking,
   BookingSource,
@@ -42,6 +43,7 @@ type BookingModalProps = {
   initialDate?: string
   rooms: Room[]
   guests: Guest[]
+  existingBookings?: Booking[]
   onOpenChange: (open: boolean) => void
   onSave: (booking: BookingDraft) => Promise<void> | void
   onCancelBooking?: (booking: Booking) => Promise<void> | void
@@ -98,6 +100,7 @@ export function BookingModal({
   initialDate,
   rooms,
   guests,
+  existingBookings = [],
   onOpenChange,
   onSave,
   onCancelBooking,
@@ -117,6 +120,10 @@ export function BookingModal({
   const mode = booking ? "Edit booking" : "Create booking"
   const selectedGuestValue = draft.guestId || newGuestValue
   const isNewGuest = selectedGuestValue === newGuestValue
+  const availabilityConflict = findBookingAvailabilityConflict(
+    draft,
+    existingBookings
+  )
 
   function updateDraft<K extends keyof BookingDraft>(
     key: K,
@@ -138,6 +145,13 @@ export function BookingModal({
       return
     }
 
+    if (availabilityConflict) {
+      toast.error(
+        `Room already booked for ${availabilityConflict.guestName} on those dates.`
+      )
+      return
+    }
+
     setSaving(true)
     try {
       await onSave({
@@ -146,8 +160,10 @@ export function BookingModal({
         amount: Number(draft.amount) || 0,
         guests: Number(draft.guests) || 1,
       })
-    } catch {
-      toast.error("The booking could not be saved.")
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "The booking could not be saved."
+      )
     } finally {
       setSaving(false)
     }
@@ -359,6 +375,19 @@ export function BookingModal({
               onChange={(event) => updateDraft("notes", event.target.value)}
             />
           </div>
+
+          {availabilityConflict ? (
+            <div className="flex gap-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-3 text-sm text-amber-950 sm:col-span-2">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <div>
+                <p className="font-medium">Room already booked</p>
+                <p className="mt-1 text-amber-900">
+                  {availabilityConflict.guestName} already has this room from{" "}
+                  {availabilityConflict.checkIn} to {availabilityConflict.checkOut}.
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <DialogFooter className="gap-2 sm:justify-between">
@@ -392,7 +421,14 @@ export function BookingModal({
             >
               Close
             </Button>
-            <Button onClick={handleSave} disabled={saving || destructiveAction !== null}>
+            <Button
+              onClick={handleSave}
+              disabled={
+                saving ||
+                destructiveAction !== null ||
+                availabilityConflict !== null
+              }
+            >
               {saving ? "Saving..." : "Save booking"}
             </Button>
           </div>

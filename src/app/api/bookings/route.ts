@@ -13,6 +13,7 @@ import {
   optionalCleanText,
   readJsonBody,
 } from "@/lib/api-validation"
+import { bookingBlocksAvailability } from "@/lib/booking-availability"
 import { prisma } from "@/lib/prisma"
 import { serializeBooking } from "@/lib/data"
 
@@ -73,6 +74,34 @@ export async function POST(request: Request) {
 
   if (guests > room.capacity) {
     return jsonError(`This room capacity is ${room.capacity} guests.`)
+  }
+
+  if (bookingBlocksAvailability(payload.status)) {
+    const conflictingBooking = await prisma.booking.findFirst({
+      where: {
+        roomId: payload.roomId,
+        deletedAt: null,
+        status: {
+          notIn: ["cancelled", "no show"],
+        },
+        id: payload.id ? { not: payload.id } : undefined,
+        checkIn: {
+          lt: dateFromString(payload.checkOut),
+        },
+        checkOut: {
+          gt: dateFromString(payload.checkIn),
+        },
+      },
+      include: { guest: true },
+      orderBy: { checkIn: "asc" },
+    })
+
+    if (conflictingBooking) {
+      return jsonError(
+        `${room.name} is already booked for ${conflictingBooking.guest.fullName} from ${conflictingBooking.checkIn.toISOString().slice(0, 10)} to ${conflictingBooking.checkOut.toISOString().slice(0, 10)}.`,
+        409
+      )
+    }
   }
 
   const guest = payload.guestId
