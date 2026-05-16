@@ -1,3 +1,4 @@
+import { ExportCsvButton } from "@/components/export-csv-button"
 import { PageHeader } from "@/components/layout/page-header"
 import { InvoiceManager } from "@/components/invoices/invoice-manager"
 import { getBookings, getInvoices, getProperty, getRooms } from "@/lib/data"
@@ -18,6 +19,7 @@ export default async function InvoicesPage() {
         eyebrow="Documents"
         title="Invoices"
         description="Create editable invoice drafts from bookings. PDF generation comes later."
+        action={<ExportCsvButton dataset="invoices" />}
       />
       <InvoiceManager
         invoices={invoices}

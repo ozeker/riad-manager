@@ -1,4 +1,5 @@
 import { BookingManager } from "@/components/bookings/booking-manager"
+import { ExportCsvButton } from "@/components/export-csv-button"
 import { PageHeader } from "@/components/layout/page-header"
 import { getBookings, getGuests, getPayments, getRooms } from "@/lib/data"
 
@@ -18,6 +19,7 @@ export default async function BookingsPage() {
         eyebrow="Operations"
         title="Bookings"
         description="Create, edit, cancel, and archive reservations while keeping payment status visible."
+        action={<ExportCsvButton dataset="bookings" />}
       />
       <BookingManager
         bookings={bookings}

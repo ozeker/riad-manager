@@ -5,6 +5,7 @@ import {
   WalletCards,
 } from "lucide-react"
 
+import { ExportCsvButton } from "@/components/export-csv-button"
 import { PageHeader } from "@/components/layout/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { Badge } from "@/components/ui/badge"
@@ -145,7 +146,16 @@ export default async function DashboardPage() {
                   The owner should always be able to export clean CSV records
                   for bookings, guests, payments, invoices, and cash.
                 </p>
-                <Badge variant="outline">Owner controls data</Badge>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <ExportCsvButton dataset="bookings" label="Bookings CSV" />
+                  <ExportCsvButton dataset="guests" label="Guests CSV" />
+                  <ExportCsvButton dataset="payments" label="Payments CSV" />
+                  <ExportCsvButton dataset="invoices" label="Invoices CSV" />
+                  <ExportCsvButton
+                    dataset="cash-movements"
+                    label="Cash CSV"
+                  />
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>
