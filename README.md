@@ -85,6 +85,7 @@ npm run verify
 Project planning documents live in `docs/`:
 
 - `docs/BRD.md`
+- `docs/OWNER_ACCEPTANCE_TESTING.md`
 - `docs/PRD.md`
 - `docs/MVP_SCOPE.md`
 - `docs/SAMPLE_DATA.md`
