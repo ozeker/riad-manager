@@ -74,6 +74,10 @@ npm run db:studio
 
 Deployment notes live in `docs/DEPLOYMENT.md`.
 
+The planned beta architecture is Vercel for the Next.js app and Supabase
+PostgreSQL for the database. Local development still uses SQLite until the
+database cutover step is intentionally performed.
+
 Before deploying, run:
 
 ```bash

@@ -12,6 +12,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:supabase": "node scripts/prisma-migrate-supabase.mjs",
     "db:postgres:validate": "prisma validate --schema prisma/postgres.schema.prisma",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",

@@ -1,72 +1,170 @@
-# Deployment Prep
+# Deployment Guide - Vercel + Supabase Beta
 
-## Current MVP Deployment Shape
+## Decision
 
-Riad Manager currently uses SQLite through Prisma.
+The beta deployment architecture is:
 
-That is suitable for:
+- Vercel hosts the Next.js app.
+- Supabase provides managed PostgreSQL.
+- Vercel stores deployment environment variables.
+- Supabase Auth, Storage, Edge Functions, and scheduled jobs are reserved for later.
 
-- local development
-- a small single-owner MVP
-- a VPS or server with persistent disk storage
+This guide prepares the project for deployment. Do not deploy until local testing is complete.
 
-It is not yet ideal for serverless hosting where the filesystem is temporary.
+## Current State
 
-## Required Production Environment Variables
+Local development still uses SQLite:
 
-Use `production.env.example` as the checklist.
+```text
+DATABASE_URL="file:./prisma/dev.db"
+```
 
-Required values:
+PostgreSQL preparation is available in:
 
-- `DATABASE_URL`
-- `OWNER_PASSWORD`
-- `AUTH_SECRET`
+```text
+prisma/postgres.schema.prisma
+```
 
-Do not commit real production secrets.
+The main app has not been switched to PostgreSQL yet.
 
-## Pre-Deployment Checks
+## Step 1 - Create A Supabase Project
 
-Run:
+In Supabase:
+
+1. Create a new project.
+2. Choose a region close to the owner or your expected users.
+3. Save the database password securely.
+4. Wait for the project to finish provisioning.
+
+## Step 2 - Get Supabase Database URLs
+
+In the Supabase project dashboard:
+
+1. Open the project.
+2. Click **Connect**.
+3. Find the PostgreSQL connection strings.
+
+For Vercel serverless runtime, use the transaction pooler for `DATABASE_URL`.
+
+Example shape:
+
+```text
+DATABASE_URL="postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true"
+```
+
+For Prisma migrations, use the session/direct-style connection for `DIRECT_URL`.
+Prisma 7 does not keep `DIRECT_URL` inside `schema.prisma`, so this repo uses
+`DIRECT_URL` through the migration helper script instead.
+
+Example shape:
+
+```text
+DIRECT_URL="postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.com:5432/postgres?sslmode=require"
+```
+
+## Step 3 - Local Environment Variables
+
+Keep using `.env` with SQLite until the app is ready to migrate.
+
+When testing PostgreSQL locally, use:
+
+```text
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+OWNER_PASSWORD="your-private-owner-password"
+AUTH_SECRET="your-long-random-secret"
+```
+
+Optional future Supabase variables:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL="https://PROJECT_REF.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="..."
+```
+
+Do not add `SUPABASE_SERVICE_ROLE_KEY` unless a future server-only feature needs it.
+
+## Step 4 - Vercel Environment Variables
+
+In Vercel:
+
+1. Create/import the project from GitHub.
+2. Open Project Settings.
+3. Open Environment Variables.
+4. Add these values for Preview and Production:
+
+```text
+DATABASE_URL
+DIRECT_URL
+OWNER_PASSWORD
+AUTH_SECRET
+```
+
+Only add these later if a Supabase browser feature is implemented:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
+
+Do not expose private database URLs or service role keys in browser code.
+
+## Step 5 - Prisma Migration Plan
+
+Do not run a destructive migration against Supabase.
+
+When ready to switch:
+
+1. Update the main Prisma schema to PostgreSQL.
+2. Update the Prisma client runtime to use the PostgreSQL adapter.
+3. Generate a fresh PostgreSQL migration.
+4. Run migrations against Supabase.
+
+Expected future command:
+
+```bash
+npm run db:migrate:supabase
+```
+
+Current validation command:
+
+```bash
+npm run db:postgres:validate
+```
+
+## Step 6 - Deploy To Vercel
+
+After the PostgreSQL switch is complete:
+
+1. Push the latest code to GitHub.
+2. Import the repo in Vercel.
+3. Add environment variables.
+4. Deploy.
+5. Open the generated Vercel URL.
+6. Log in with `OWNER_PASSWORD`.
+7. Run the MVP workflow checklist.
+
+## Verification
+
+Before deployment:
 
 ```bash
 npm run verify
+npm run db:postgres:validate
 ```
 
-Expected result:
-
-- ESLint passes
-- Next.js production build passes
-
-Run database migrations:
+After deployment:
 
 ```bash
-npm run db:migrate:deploy
+npm run test:mvp
 ```
 
-Expected result:
+Set `MVP_TEST_BASE_URL` to the deployed Vercel URL when running the smoke test against beta.
 
-- Prisma applies pending migrations
-- no migration errors are shown
+## References
 
-## Recommended MVP Hosting Path
-
-For the current SQLite MVP:
-
-1. Use a VPS or small persistent server.
-2. Store the SQLite database on a persistent disk path.
-3. Set `DATABASE_URL` to that disk path.
-4. Set a private `OWNER_PASSWORD`.
-5. Set a long random `AUTH_SECRET`.
-6. Run `npm install`.
-7. Run `npm run db:migrate:deploy`.
-8. Run `npm run build`.
-9. Start with `npm run start`.
-
-## Future Production Upgrade
-
-Before a wider production launch, migrate from SQLite to PostgreSQL.
-
-That will make deployment easier on managed platforms and reduce the risk of
-filesystem persistence problems.
-
-See `docs/POSTGRESQL_MIGRATION.md` for the migration prep plan.
+- Vercel environment variables: https://vercel.com/docs/projects/environment-variables
+- Vercel environments: https://vercel.com/docs/deployments/environments
+- Supabase Prisma guide: https://supabase.com/docs/guides/database/prisma
+- Supabase connection strings: https://supabase.com/docs/reference/postgres/connection-strings
+- Prisma schema datasource docs: https://www.prisma.io/docs/orm/prisma-schema/overview
