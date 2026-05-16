@@ -7,12 +7,11 @@ function csvCell(value: CsvValue) {
   return `"${text.replaceAll('"', '""')}"`
 }
 
-export function toCsv(rows: CsvRow[]) {
-  if (rows.length === 0) {
+export function toCsv(rows: CsvRow[], headers = rows[0] ? Object.keys(rows[0]) : []) {
+  if (headers.length === 0) {
     return ""
   }
 
-  const headers = Object.keys(rows[0])
   const lines = [
     headers.map(csvCell).join(","),
     ...rows.map((row) => headers.map((header) => csvCell(row[header])).join(",")),
