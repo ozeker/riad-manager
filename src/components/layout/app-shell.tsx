@@ -1,6 +1,8 @@
 "use client"
 
-import { Bell, Search } from "lucide-react"
+import { Bell, LogOut, Search } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { useState } from "react"
 
 import { AppSidebar, MobileNav } from "@/components/layout/app-sidebar"
 import { Button } from "@/components/ui/button"
@@ -14,6 +16,26 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  async function handleLogout() {
+    setLoggingOut(true)
+
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+      router.replace("/login")
+      router.refresh()
+    } finally {
+      setLoggingOut(false)
+    }
+  }
+
+  if (pathname === "/login") {
+    return <>{children}</>
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f8fb] text-foreground">
       <div className="flex min-h-screen">
@@ -45,7 +67,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <DropdownMenuLabel>Riad Al Fes</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem disabled>Single owner mode</DropdownMenuItem>
-                  <DropdownMenuItem disabled>Mock prototype</DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={loggingOut}
+                    onSelect={(event) => {
+                      event.preventDefault()
+                      void handleLogout()
+                    }}
+                  >
+                    <LogOut className="size-4" />
+                    {loggingOut ? "Signing out..." : "Sign out"}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

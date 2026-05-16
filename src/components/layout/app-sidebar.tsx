@@ -92,12 +92,12 @@ function SidebarFooter() {
   return (
     <div className="rounded-lg border bg-background p-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium text-muted-foreground">Prototype</p>
-        <Badge variant="secondary">Mock data</Badge>
+        <p className="text-xs font-medium text-muted-foreground">Owner app</p>
+        <Badge variant="secondary">Local MVP</Badge>
       </div>
       <p className="mt-2 text-xs leading-5 text-muted-foreground">
-        Database, auth, iCal sync, and PDF generation are intentionally not
-        connected yet.
+        Single-owner access is enabled. Keep the owner password and auth secret
+        private before deployment.
       </p>
     </div>
   )
