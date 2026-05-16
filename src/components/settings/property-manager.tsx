@@ -39,10 +39,12 @@ const fallbackProperty: Property = {
   id: "property-riad-al-fes",
   name: "Riad Al Fes",
   legalName: "Riad Al Fes SARL",
+  address: "23 Derb Zellij, Fes Medina",
   city: "Fes",
   country: "Morocco",
   phone: "+212 600 000 000",
   ice: "001234567000089",
+  logoUrl: "",
   defaultCurrency: "MAD",
   touristTaxMadPerPersonNight: 30,
   vatRatePercent: 10,
@@ -75,6 +77,7 @@ export function PropertyManager({ property: initialProperty }: PropertyManagerPr
     if (
       !draft.name.trim() ||
       !draft.legalName.trim() ||
+      !draft.address.trim() ||
       !draft.city.trim() ||
       !draft.country.trim() ||
       !draft.phone.trim() ||
@@ -132,6 +135,13 @@ export function PropertyManager({ property: initialProperty }: PropertyManagerPr
           </div>
           <Separator />
           <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Invoice address</span>
+            <span className="max-w-[18rem] text-right font-medium">
+              {property.address}
+            </span>
+          </div>
+          <Separator />
+          <div className="flex justify-between gap-4">
             <span className="text-muted-foreground">Location</span>
             <span className="font-medium">
               {property.city}, {property.country}
@@ -146,6 +156,13 @@ export function PropertyManager({ property: initialProperty }: PropertyManagerPr
           <div className="flex justify-between gap-4">
             <span className="text-muted-foreground">ICE</span>
             <span className="font-medium">{property.ice}</span>
+          </div>
+          <Separator />
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Logo URL</span>
+            <span className="max-w-[18rem] truncate text-right font-medium">
+              {property.logoUrl || "Not set"}
+            </span>
           </div>
           <Separator />
           <div className="flex justify-between gap-4">
@@ -196,6 +213,15 @@ export function PropertyManager({ property: initialProperty }: PropertyManagerPr
               />
             </div>
 
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="address">Invoice address</Label>
+              <Input
+                id="address"
+                value={draft.address}
+                onChange={(event) => updateDraft("address", event.target.value)}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="city">City</Label>
               <Input
@@ -229,6 +255,17 @@ export function PropertyManager({ property: initialProperty }: PropertyManagerPr
                 id="ice"
                 value={draft.ice}
                 onChange={(event) => updateDraft("ice", event.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="logoUrl">Logo URL</Label>
+              <Input
+                id="logoUrl"
+                type="url"
+                value={draft.logoUrl}
+                placeholder="https://example.com/logo.png"
+                onChange={(event) => updateDraft("logoUrl", event.target.value)}
               />
             </div>
 

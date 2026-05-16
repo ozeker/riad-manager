@@ -18,6 +18,7 @@ type InvoicePdfData = {
   property: {
     name: string
     legalName: string
+    address: string
     city: string
     country: string
     phone: string
@@ -138,7 +139,14 @@ export async function createInvoiceDraftPdf(invoice: InvoicePdfData) {
   drawText(invoice.property.legalName, margin, y, { size: 10 })
   y -= 14
   drawText(
-    `${invoice.property.city}, ${invoice.property.country} | Phone: ${invoice.property.phone} | ICE: ${invoice.property.ice}`,
+    `${invoice.property.address} | ${invoice.property.city}, ${invoice.property.country}`,
+    margin,
+    y,
+    { size: 9, color: rgb(0.35, 0.38, 0.44) }
+  )
+  y -= 12
+  drawText(
+    `Phone: ${invoice.property.phone} | ICE: ${invoice.property.ice}`,
     margin,
     y,
     { size: 9, color: rgb(0.35, 0.38, 0.44) }

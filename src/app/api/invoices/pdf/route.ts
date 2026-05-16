@@ -49,6 +49,7 @@ export async function GET(request: Request) {
     property: {
       name: property?.name ?? "Riad Al Fes",
       legalName: property?.legalName ?? "Riad Al Fes SARL",
+      address: property?.address ?? "23 Derb Zellij, Fes Medina",
       city: property?.city ?? "Fes",
       country: property?.country ?? "Morocco",
       phone: property?.phone ?? "+212 600 000 000",

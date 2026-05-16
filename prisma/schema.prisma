@@ -11,10 +11,12 @@ model Property {
   id                          String @id @default(cuid())
   name                        String
   legalName                   String
+  address                     String @default("")
   city                        String
   country                     String
   phone                       String
   ice                         String
+  logoUrl                     String @default("")
   defaultCurrency             String @default("MAD")
   touristTaxMadPerPersonNight Int    @default(30)
   vatRatePercent              Int    @default(10)

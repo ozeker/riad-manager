@@ -10,10 +10,12 @@ import type {
 export const property = {
   name: "Riad Al Fes",
   legalName: "Riad Al Fes SARL",
+  address: "23 Derb Zellij, Fes Medina",
   city: "Fes",
   country: "Morocco",
   phone: "+212 600 000 000",
   ice: "001234567000089",
+  logoUrl: "",
   defaultCurrency: "MAD",
   touristTax: "30 MAD per person per night",
   vatRate: "10%",

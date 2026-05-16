@@ -4,10 +4,12 @@ export type Property = {
   id: string
   name: string
   legalName: string
+  address: string
   city: string
   country: string
   phone: string
   ice: string
+  logoUrl: string
   defaultCurrency: Currency
   touristTaxMadPerPersonNight: number
   vatRatePercent: number

@@ -92,10 +92,12 @@ type PropertyRow = {
   id: string
   name: string
   legalName: string
+  address: string
   city: string
   country: string
   phone: string
   ice: string
+  logoUrl: string
   defaultCurrency: string
   touristTaxMadPerPersonNight: number
   vatRatePercent: number
@@ -195,10 +197,12 @@ export function serializeProperty(property: PropertyRow): Property {
     id: property.id,
     name: property.name,
     legalName: property.legalName,
+    address: property.address,
     city: property.city,
     country: property.country,
     phone: property.phone,
     ice: property.ice,
+    logoUrl: property.logoUrl,
     defaultCurrency: property.defaultCurrency as Currency,
     touristTaxMadPerPersonNight: property.touristTaxMadPerPersonNight,
     vatRatePercent: property.vatRatePercent,
