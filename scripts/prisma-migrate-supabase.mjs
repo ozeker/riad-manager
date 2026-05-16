@@ -1,3 +1,5 @@
+import "dotenv/config"
+
 import { spawn } from "node:child_process"
 
 if (!process.env.DIRECT_URL) {

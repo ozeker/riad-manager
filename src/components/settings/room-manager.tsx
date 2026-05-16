@@ -219,7 +219,7 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
           <DialogHeader>
             <DialogTitle>{draft.id ? "Edit room" : "Add room"}</DialogTitle>
             <DialogDescription>
-              Room changes are saved to the local SQLite database.
+              Room changes are saved to the PostgreSQL database.
             </DialogDescription>
           </DialogHeader>
 

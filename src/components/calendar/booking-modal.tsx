@@ -201,7 +201,7 @@ export function BookingModal({
         <DialogHeader>
           <DialogTitle>{mode}</DialogTitle>
           <DialogDescription>
-            Booking changes are saved to the local SQLite database.
+            Booking changes are saved to the PostgreSQL database.
           </DialogDescription>
         </DialogHeader>
 

@@ -209,7 +209,7 @@ export function GuestManager({
           <DialogHeader>
             <DialogTitle>{draft.id ? "Edit guest" : "New guest"}</DialogTitle>
             <DialogDescription>
-              Guest details are saved to the local SQLite database.
+              Guest details are saved to the PostgreSQL database.
             </DialogDescription>
           </DialogHeader>
 

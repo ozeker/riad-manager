@@ -38,7 +38,8 @@ Git because it contains the local database path and owner login secrets.
 
 Required values:
 
-- `DATABASE_URL`: local Prisma SQLite database path.
+- `DATABASE_URL`: Supabase PostgreSQL pooled connection string.
+- `DIRECT_URL`: Supabase PostgreSQL direct/session connection string for Prisma migrations.
 - `OWNER_PASSWORD`: private password used on the `/login` page.
 - `AUTH_SECRET`: long random value used to sign the owner session cookie.
 
@@ -50,12 +51,13 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 ## Database
 
-This project uses Prisma with a local SQLite database for development.
+This project uses Prisma with PostgreSQL. For the beta, PostgreSQL is hosted by
+Supabase.
 
-Create and update the local database:
+Apply migrations to Supabase:
 
 ```bash
-npm run db:migrate
+npm run db:migrate:supabase
 ```
 
 Load sample data:
@@ -75,8 +77,7 @@ npm run db:studio
 Deployment notes live in `docs/DEPLOYMENT.md`.
 
 The planned beta architecture is Vercel for the Next.js app and Supabase
-PostgreSQL for the database. Local development still uses SQLite until the
-database cutover step is intentionally performed.
+PostgreSQL for the database.
 
 Before deploying, run:
 

@@ -306,7 +306,7 @@ export function PaymentManager({
               {draft.id ? "Edit payment" : "Record payment"}
             </DialogTitle>
             <DialogDescription>
-              Payments are saved to the local SQLite database and update booking
+              Payments are saved to the PostgreSQL database and update booking
               payment status.
             </DialogDescription>
           </DialogHeader>

@@ -13,13 +13,13 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:supabase": "node scripts/prisma-migrate-supabase.mjs",
-    "db:postgres:validate": "prisma validate --schema prisma/postgres.schema.prisma",
+    "db:postgres:validate": "prisma validate",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "test:mvp": "node scripts/mvp-smoke-test.mjs"
   },
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -28,6 +28,7 @@
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "pdf-lib": "^1.17.1",
+    "pg": "^8.20.0",
     "radix-ui": "^1.4.3",
     "react": "19.2.4",
     "react-day-picker": "^10.0.1",

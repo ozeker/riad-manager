@@ -1,54 +1,21 @@
-# PostgreSQL Migration Prep
-
-## Why This Matters
-
-Riad Manager currently uses SQLite for local MVP testing.
-
-SQLite is simple and works well on your machine, but PostgreSQL is the better
-choice before sharing a hosted beta or production version because:
-
-- hosted platforms support PostgreSQL more reliably
-- database storage is persistent and managed
-- backups are easier to automate
-- future multi-user features will be safer
+# PostgreSQL Cutover Notes
 
 ## Current State
 
-The live app still uses:
+Riad Manager now uses PostgreSQL through Prisma.
 
-```text
-prisma/schema.prisma
-```
+For beta, PostgreSQL is expected to be hosted by Supabase and the Next.js app is
+expected to be hosted by Vercel.
 
-That schema is configured for SQLite.
+The previous SQLite setup was for temporary local MVP development only. The
+temporary local data is not part of the beta migration.
 
-This repo now also includes:
+## Runtime Connections
 
-```text
-prisma/postgres.schema.prisma
-```
+Use two Supabase database URLs:
 
-That file is a PostgreSQL-ready schema candidate with the same models.
-
-## Validation Command
-
-Run:
-
-```bash
-npm run db:postgres:validate
-```
-
-Expected result:
-
-- Prisma validates the PostgreSQL schema
-- no database connection is required
-
-## Supabase Connection URLs
-
-For Vercel + Supabase:
-
-- use `DATABASE_URL` for the app runtime connection
-- use `DIRECT_URL` for Prisma migrations
+- `DATABASE_URL` for the app runtime connection
+- `DIRECT_URL` for Prisma migrations
 
 Recommended beta values:
 
@@ -69,64 +36,54 @@ Only use variables beginning with `NEXT_PUBLIC_` in browser code.
 
 Do not expose database URLs or service role keys in browser code.
 
-## Recommended Migration Order
+## Migration Command
 
-1. Finish local owner acceptance testing with SQLite.
-2. Create a Supabase project.
-3. Copy Supabase connection strings.
-4. Add production `DATABASE_URL` and `DIRECT_URL`.
-5. Switch the main Prisma schema provider from SQLite to PostgreSQL.
-6. Replace the SQLite Prisma adapter in `src/lib/prisma.ts`.
-7. Generate a fresh initial PostgreSQL migration.
-8. Run `npm run db:migrate:supabase`.
-9. Seed or import starting data.
-10. Run `npm run verify`.
-11. Deploy the beta.
-12. Run `npm run test:mvp` against the beta.
+After adding real Supabase values to `.env`, run:
 
-## Data Migration Strategy
-
-For the beta, the safest beginner path is:
-
-1. Export important local records as CSV.
-2. Create the PostgreSQL database.
-3. Run migrations on PostgreSQL.
-4. Seed base sample data only if needed.
-5. Re-enter or import the real owner data intentionally.
-
-For later production data migration, build a dedicated migration script from
-SQLite to PostgreSQL.
-
-## Environment Variables
-
-PostgreSQL `DATABASE_URL` should look like:
-
-```text
-postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true
+```bash
+npm run db:migrate:supabase
 ```
 
-PostgreSQL `DIRECT_URL` should look like:
+Expected result:
 
-```text
-postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.com:5432/postgres?sslmode=require
+- Prisma connects using `DIRECT_URL`
+- the initial PostgreSQL migration is applied
+- the Supabase database gets the app tables
+
+## Optional Seed Command
+
+To load sample data into the connected PostgreSQL database:
+
+```bash
+npm run db:seed
 ```
 
-For local SQLite testing, keep:
+Only run this if you want demo data in the beta database.
 
-```text
-DATABASE_URL="file:./prisma/dev.db"
+## Verification Commands
+
+Run:
+
+```bash
+npm run db:postgres:validate
+npm run db:generate
+npm run build
 ```
 
-For hosted beta, use PostgreSQL:
+Expected result:
 
-```text
-DATABASE_URL="postgresql://..."
-DIRECT_URL="postgresql://..."
-```
+- Prisma schema validates
+- Prisma client is generated
+- Next.js production build passes
 
-## Important Rule
+## Data Strategy
 
-Do not switch the main app to PostgreSQL until local UI/functionality testing is
-complete.
+The current local data is disposable.
 
-The current `postgres.schema.prisma` file is preparation only.
+For real beta data:
+
+1. Create the Supabase database.
+2. Apply migrations.
+3. Add the owner's real property, rooms, and iCal feed URLs.
+4. Import iCal reservations when the owner provides the links.
+5. Use CSV exports as the first manual backup mechanism.

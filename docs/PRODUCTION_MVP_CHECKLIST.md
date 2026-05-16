@@ -11,8 +11,8 @@ Use this checklist before the owner relies on Riad Manager for daily operations.
 
 ## Data
 
-- [ ] Production database path is on persistent storage.
-- [ ] `npm run db:migrate:deploy` has been run successfully.
+- [ ] Supabase PostgreSQL project is active.
+- [ ] `npm run db:migrate:supabase` has been run successfully.
 - [ ] Property settings are correct: name, legal name, address, phone, ICE, tax, VAT.
 - [ ] Room list is correct and inactive rooms are disabled.
 - [ ] CSV backup exports are downloadable from Settings.
@@ -66,7 +66,7 @@ Expected:
 
 ## Current Production Caveat
 
-This MVP still uses SQLite.
+This MVP uses a single owner password and a simple signed session cookie.
 
-Before a wider or cloud/serverless production launch, migrate the database to
-PostgreSQL.
+Before adding staff/receptionist accounts, upgrade authentication and
+permissions.

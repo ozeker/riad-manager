@@ -13,19 +13,16 @@ This guide prepares the project for deployment. Do not deploy until local testin
 
 ## Current State
 
-Local development still uses SQLite:
+The app now uses PostgreSQL through Prisma.
+
+For beta, use Supabase PostgreSQL:
 
 ```text
-DATABASE_URL="file:./prisma/dev.db"
+DATABASE_URL="postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true"
+DIRECT_URL="postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.com:5432/postgres?sslmode=require"
 ```
 
-PostgreSQL preparation is available in:
-
-```text
-prisma/postgres.schema.prisma
-```
-
-The main app has not been switched to PostgreSQL yet.
+Do not commit real Supabase URLs or passwords.
 
 ## Step 1 - Create A Supabase Project
 
@@ -64,9 +61,7 @@ DIRECT_URL="postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.co
 
 ## Step 3 - Local Environment Variables
 
-Keep using `.env` with SQLite until the app is ready to migrate.
-
-When testing PostgreSQL locally, use:
+Create `.env` locally and add:
 
 ```text
 DATABASE_URL="postgresql://..."
@@ -109,32 +104,25 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 Do not expose private database URLs or service role keys in browser code.
 
-## Step 5 - Prisma Migration Plan
-
-Do not run a destructive migration against Supabase.
-
-When ready to switch:
-
-1. Update the main Prisma schema to PostgreSQL.
-2. Update the Prisma client runtime to use the PostgreSQL adapter.
-3. Generate a fresh PostgreSQL migration.
-4. Run migrations against Supabase.
-
-Expected future command:
+## Step 5 - Prisma Migration
 
 ```bash
 npm run db:migrate:supabase
 ```
 
-Current validation command:
+Expected result:
+
+- Prisma connects to Supabase using `DIRECT_URL`
+- tables are created in the Supabase PostgreSQL database
+- no destructive reset is required for a fresh beta database
+
+Validation command:
 
 ```bash
 npm run db:postgres:validate
 ```
 
 ## Step 6 - Deploy To Vercel
-
-After the PostgreSQL switch is complete:
 
 1. Push the latest code to GitHub.
 2. Import the repo in Vercel.
