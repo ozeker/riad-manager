@@ -1,9 +1,52 @@
 export const AUTH_COOKIE_NAME = "riad_owner_session"
 
 const SESSION_LABEL = "riad-manager-owner-session-v1"
+const MIN_PASSWORD_LENGTH = 12
+const MIN_SECRET_LENGTH = 32
+
+const placeholderValues = new Set([
+  "change-this-owner-password",
+  "change-this-to-a-long-random-secret",
+  "riad-owner-demo",
+])
 
 export function getOwnerPassword() {
   return process.env.OWNER_PASSWORD
+}
+
+export function validateAuthConfig() {
+  const ownerPassword = process.env.OWNER_PASSWORD
+  const authSecret = process.env.AUTH_SECRET
+
+  if (!ownerPassword || placeholderValues.has(ownerPassword)) {
+    return {
+      ok: false,
+      message: "OWNER_PASSWORD must be set to a private value in .env",
+    }
+  }
+
+  if (ownerPassword.length < MIN_PASSWORD_LENGTH) {
+    return {
+      ok: false,
+      message: `OWNER_PASSWORD must be at least ${MIN_PASSWORD_LENGTH} characters`,
+    }
+  }
+
+  if (!authSecret || placeholderValues.has(authSecret)) {
+    return {
+      ok: false,
+      message: "AUTH_SECRET must be set to a private value in .env",
+    }
+  }
+
+  if (authSecret.length < MIN_SECRET_LENGTH) {
+    return {
+      ok: false,
+      message: `AUTH_SECRET must be at least ${MIN_SECRET_LENGTH} characters`,
+    }
+  }
+
+  return { ok: true, message: "" }
 }
 
 function getAuthSecret() {
@@ -13,11 +56,7 @@ function getAuthSecret() {
     return secret
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    return "riad-manager-local-dev-secret"
-  }
-
-  throw new Error("AUTH_SECRET is required in production")
+  throw new Error("AUTH_SECRET is required")
 }
 
 async function sha256Hex(value: string) {

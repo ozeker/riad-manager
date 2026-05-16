@@ -4,9 +4,16 @@ import {
   AUTH_COOKIE_NAME,
   createSessionToken,
   getOwnerPassword,
+  validateAuthConfig,
 } from "@/lib/auth"
 
 export async function POST(request: Request) {
+  const authConfig = validateAuthConfig()
+
+  if (!authConfig.ok) {
+    return NextResponse.json({ error: authConfig.message }, { status: 500 })
+  }
+
   const ownerPassword = getOwnerPassword()
 
   if (!ownerPassword) {

@@ -31,6 +31,23 @@ Then open:
 http://localhost:3000
 ```
 
+## Local Environment
+
+Create `.env` from `.env.example` and keep it private. This file is ignored by
+Git because it contains the local database path and owner login secrets.
+
+Required values:
+
+- `DATABASE_URL`: local Prisma SQLite database path.
+- `OWNER_PASSWORD`: private password used on the `/login` page.
+- `AUTH_SECRET`: long random value used to sign the owner session cookie.
+
+Generate an auth secret:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
 ## Database
 
 This project uses Prisma with a local SQLite database for development.
