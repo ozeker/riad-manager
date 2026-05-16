@@ -65,6 +65,14 @@ type IcalImportResult = {
   updated: number
   skipped: number
   errors: number
+  results: {
+    feedId: string
+    feedName: string
+    imported: number
+    updated: number
+    skipped: number
+    error?: string
+  }[]
 }
 
 const sources: IcalFeed["source"][] = [
@@ -81,6 +89,12 @@ const emptyFeed: IcalFeedDraft = {
   roomName: "",
   url: "",
   active: true,
+  lastImportStatus: "",
+  lastImportMessage: "",
+  lastImportImported: 0,
+  lastImportUpdated: 0,
+  lastImportSkipped: 0,
+  lastImportErrors: 0,
 }
 
 function formatLastSynced(value: string) {
@@ -92,6 +106,13 @@ function formatLastSynced(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value))
+}
+
+function statusVariant(status: IcalFeed["lastImportStatus"]) {
+  if (status === "success") return "secondary"
+  if (status === "partial") return "default"
+  if (status === "error") return "outline"
+  return "outline"
 }
 
 export function IcalFeedManager({
@@ -215,7 +236,7 @@ export function IcalFeedManager({
     }
   }
 
-  async function importActiveFeeds() {
+  async function importFeeds(feedId?: string) {
     setImporting(true)
     try {
       const response = await fetch("/api/ical-import", {
@@ -223,7 +244,7 @@ export function IcalFeedManager({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify(feedId ? { feedId } : {}),
       })
 
       if (!response.ok) {
@@ -231,9 +252,13 @@ export function IcalFeedManager({
       }
 
       const result = (await response.json()) as IcalImportResult
-      toast.success(
-        `Imported ${result.imported}, updated ${result.updated}, skipped ${result.skipped}.`
-      )
+      const message = `Imported ${result.imported}, updated ${result.updated}, skipped ${result.skipped}.`
+
+      if (result.errors > 0) {
+        toast.warning(`${message} ${result.errors} feed error(s).`)
+      } else {
+        toast.success(message)
+      }
       router.refresh()
     } catch {
       toast.error("The iCal import could not be completed.")
@@ -249,14 +274,14 @@ export function IcalFeedManager({
           <div>
             <CardTitle className="text-base">iCal feeds</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Store external calendar URLs now. Reservation syncing comes later.
+              Import read-only reservations from Booking.com, Airbnb, and HotelRunner.
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button
               size="sm"
               variant="outline"
-              onClick={importActiveFeeds}
+              onClick={() => importFeeds()}
               disabled={importing || feeds.length === 0}
             >
               <RefreshCw className="size-4" />
@@ -278,6 +303,7 @@ export function IcalFeedManager({
                 <TableHead>URL</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last synced</TableHead>
+                <TableHead>Last result</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -314,6 +340,18 @@ export function IcalFeedManager({
                   </TableCell>
                   <TableCell>{formatLastSynced(feed.lastSyncedAt)}</TableCell>
                   <TableCell>
+                    <div className="space-y-1">
+                      <Badge variant={statusVariant(feed.lastImportStatus)}>
+                        {feed.lastImportStatus || "Never imported"}
+                      </Badge>
+                      {feed.lastImportMessage ? (
+                        <p className="max-w-[16rem] truncate text-xs text-muted-foreground">
+                          {feed.lastImportMessage}
+                        </p>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -327,6 +365,13 @@ export function IcalFeedManager({
                         <DropdownMenuItem onClick={() => openEdit(feed)}>
                           <Pencil className="size-4" />
                           Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => importFeeds(feed.id)}
+                          disabled={importing || !feed.active}
+                        >
+                          <RefreshCw className="size-4" />
+                          Import this feed
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -344,7 +389,7 @@ export function IcalFeedManager({
               {feeds.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     className="h-24 text-center text-muted-foreground"
                   >
                     No iCal feeds yet.
@@ -361,8 +406,7 @@ export function IcalFeedManager({
           <DialogHeader>
             <DialogTitle>{draft.id ? "Edit iCal feed" : "Add iCal feed"}</DialogTitle>
             <DialogDescription>
-              The app stores feed URLs only in this milestone. It does not import
-              reservations yet.
+              Active feeds can be imported from the Settings page.
             </DialogDescription>
           </DialogHeader>
 

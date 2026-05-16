@@ -93,6 +93,12 @@ export type IcalFeed = {
   url: string
   active: boolean
   lastSyncedAt: string
+  lastImportStatus: "success" | "partial" | "error" | ""
+  lastImportMessage: string
+  lastImportImported: number
+  lastImportUpdated: number
+  lastImportSkipped: number
+  lastImportErrors: number
 }
 
 export type InvoiceLine = {

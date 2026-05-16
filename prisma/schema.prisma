@@ -154,6 +154,12 @@ model IcalFeed {
   room         Room?     @relation(fields: [roomId], references: [id])
   active       Boolean   @default(true)
   lastSyncedAt DateTime?
+  lastImportStatus  String?
+  lastImportMessage String?
+  lastImportImported Int @default(0)
+  lastImportUpdated  Int @default(0)
+  lastImportSkipped  Int @default(0)
+  lastImportErrors   Int @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

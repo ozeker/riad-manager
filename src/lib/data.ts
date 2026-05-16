@@ -56,6 +56,12 @@ type IcalFeedRow = {
   url: string
   active: boolean
   lastSyncedAt: Date | null
+  lastImportStatus: string | null
+  lastImportMessage: string | null
+  lastImportImported: number
+  lastImportUpdated: number
+  lastImportSkipped: number
+  lastImportErrors: number
 }
 
 type InvoiceWithBooking = {
@@ -149,6 +155,12 @@ export function serializeIcalFeed(feed: IcalFeedRow): IcalFeed {
     url: feed.url,
     active: feed.active,
     lastSyncedAt: feed.lastSyncedAt ? feed.lastSyncedAt.toISOString() : "",
+    lastImportStatus: (feed.lastImportStatus ?? "") as IcalFeed["lastImportStatus"],
+    lastImportMessage: feed.lastImportMessage ?? "",
+    lastImportImported: feed.lastImportImported,
+    lastImportUpdated: feed.lastImportUpdated,
+    lastImportSkipped: feed.lastImportSkipped,
+    lastImportErrors: feed.lastImportErrors,
   }
 }
 

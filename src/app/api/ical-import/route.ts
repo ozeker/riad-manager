@@ -73,11 +73,23 @@ async function importFeed(feed: IcalFeedForImport): Promise<ImportResult> {
   }
 
   if (!feed.roomId) {
-    return {
+    const missingRoomResult = {
       ...result,
       skipped: 1,
       error: "Feed is not assigned to a room.",
     }
+    await prisma.icalFeed.update({
+      where: { id: feed.id },
+      data: {
+        lastImportStatus: "error",
+        lastImportMessage: missingRoomResult.error,
+        lastImportImported: 0,
+        lastImportUpdated: 0,
+        lastImportSkipped: 1,
+        lastImportErrors: 1,
+      },
+    })
+    return missingRoomResult
   }
 
   try {
@@ -154,13 +166,38 @@ async function importFeed(feed: IcalFeedForImport): Promise<ImportResult> {
 
     await prisma.icalFeed.update({
       where: { id: feed.id },
-      data: { lastSyncedAt: new Date() },
+      data: {
+        lastSyncedAt: new Date(),
+        lastImportStatus: "success",
+        lastImportMessage: `Imported ${result.imported}, updated ${result.updated}, skipped ${result.skipped}.`,
+        lastImportImported: result.imported,
+        lastImportUpdated: result.updated,
+        lastImportSkipped: result.skipped,
+        lastImportErrors: 0,
+      },
     })
   } catch (error) {
-    return {
+    const failedResult = {
       ...result,
       error: error instanceof Error ? error.message : "Unknown import error.",
     }
+    await prisma.icalFeed.update({
+      where: { id: feed.id },
+      data: {
+        lastSyncedAt: new Date(),
+        lastImportStatus:
+          result.imported > 0 || result.updated > 0 || result.skipped > 0
+            ? "partial"
+            : "error",
+        lastImportMessage: failedResult.error,
+        lastImportImported: result.imported,
+        lastImportUpdated: result.updated,
+        lastImportSkipped: result.skipped,
+        lastImportErrors: 1,
+      },
+    })
+
+    return failedResult
   }
 
   return result
