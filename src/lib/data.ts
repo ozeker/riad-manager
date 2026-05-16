@@ -45,6 +45,28 @@ type CashMovementRow = {
   notes: string | null
 }
 
+type InvoiceWithBooking = {
+  id: string
+  bookingId: string
+  booking: {
+    guest: { fullName: string }
+    room: { name: string }
+    checkIn: Date
+    checkOut: Date
+  }
+  status: string
+  issueDate: Date
+  total: number
+  currency: string
+  lines: {
+    id: string
+    description: string
+    quantity: number
+    unitPrice: number
+    total: number
+  }[]
+}
+
 function dateString(value: Date) {
   return value.toISOString().slice(0, 10)
 }
@@ -88,6 +110,28 @@ export function serializeCashMovement(movement: CashMovementRow): CashMovement {
     amount: movement.amount,
     currency: "MAD",
     notes: movement.notes ?? "",
+  }
+}
+
+export function serializeInvoice(invoice: InvoiceWithBooking): Invoice {
+  return {
+    id: invoice.id,
+    bookingId: invoice.bookingId,
+    guestName: invoice.booking.guest.fullName,
+    roomName: invoice.booking.room.name,
+    checkIn: dateString(invoice.booking.checkIn),
+    checkOut: dateString(invoice.booking.checkOut),
+    status: invoice.status as Invoice["status"],
+    total: invoice.total,
+    currency: invoice.currency as Currency,
+    issueDate: dateString(invoice.issueDate),
+    lines: invoice.lines.map((line) => ({
+      id: line.id,
+      description: line.description,
+      quantity: line.quantity,
+      unitPrice: line.unitPrice,
+      total: line.total,
+    })),
   }
 }
 
@@ -159,17 +203,12 @@ export async function getCashMovements(): Promise<CashMovement[]> {
 
 export async function getInvoices(): Promise<Invoice[]> {
   const rows = await prisma.invoice.findMany({
-    include: { booking: { include: { guest: true } } },
+    include: {
+      booking: { include: { guest: true, room: true } },
+      lines: { orderBy: { createdAt: "asc" } },
+    },
     orderBy: { issueDate: "desc" },
   })
 
-  return rows.map((invoice) => ({
-    id: invoice.id,
-    bookingId: invoice.bookingId,
-    guestName: invoice.booking.guest.fullName,
-    status: invoice.status as Invoice["status"],
-    total: invoice.total,
-    currency: invoice.currency as Currency,
-    issueDate: dateString(invoice.issueDate),
-  }))
+  return rows.map(serializeInvoice)
 }

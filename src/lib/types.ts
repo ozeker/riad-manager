@@ -71,12 +71,24 @@ export type CashMovement = {
   notes: string
 }
 
+export type InvoiceLine = {
+  id: string
+  description: string
+  quantity: number
+  unitPrice: number
+  total: number
+}
+
 export type Invoice = {
   id: string
   bookingId: string
   guestName: string
+  roomName: string
+  checkIn: string
+  checkOut: string
   status: "draft" | "final"
   total: number
   currency: Currency
   issueDate: string
+  lines: InvoiceLine[]
 }
