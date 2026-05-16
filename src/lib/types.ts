@@ -1,5 +1,18 @@
 export type Currency = "MAD" | "EUR" | "USD"
 
+export type Property = {
+  id: string
+  name: string
+  legalName: string
+  city: string
+  country: string
+  phone: string
+  ice: string
+  defaultCurrency: Currency
+  touristTaxMadPerPersonNight: number
+  vatRatePercent: number
+}
+
 export type BookingSource =
   | "Booking.com"
   | "Airbnb"

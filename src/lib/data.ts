@@ -7,6 +7,7 @@ import type {
   IcalFeed,
   Invoice,
   Payment,
+  Property,
   Room,
 } from "@/lib/types"
 
@@ -77,6 +78,19 @@ type InvoiceWithBooking = {
     unitPrice: number
     total: number
   }[]
+}
+
+type PropertyRow = {
+  id: string
+  name: string
+  legalName: string
+  city: string
+  country: string
+  phone: string
+  ice: string
+  defaultCurrency: string
+  touristTaxMadPerPersonNight: number
+  vatRatePercent: number
 }
 
 function dateString(value: Date) {
@@ -160,8 +174,24 @@ export function serializeInvoice(invoice: InvoiceWithBooking): Invoice {
   }
 }
 
-export async function getProperty() {
-  return prisma.property.findFirst()
+export function serializeProperty(property: PropertyRow): Property {
+  return {
+    id: property.id,
+    name: property.name,
+    legalName: property.legalName,
+    city: property.city,
+    country: property.country,
+    phone: property.phone,
+    ice: property.ice,
+    defaultCurrency: property.defaultCurrency as Currency,
+    touristTaxMadPerPersonNight: property.touristTaxMadPerPersonNight,
+    vatRatePercent: property.vatRatePercent,
+  }
+}
+
+export async function getProperty(): Promise<Property | null> {
+  const property = await prisma.property.findFirst()
+  return property ? serializeProperty(property) : null
 }
 
 export async function getRooms(options?: { activeOnly?: boolean }): Promise<Room[]> {
