@@ -30,6 +30,7 @@ model Room {
   active   Boolean @default(true)
 
   bookings Booking[]
+  icalFeeds IcalFeed[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -66,6 +67,10 @@ model Booking {
   status   String
   notes    String?
 
+  importedFromFeedId String?
+  externalEventId    String?
+  importedAt         DateTime?
+
   deletedAt DateTime?
   payments  Payment[]
   invoice   Invoice?
@@ -75,6 +80,7 @@ model Booking {
 
   @@index([roomId, checkIn, checkOut])
   @@index([guestId])
+  @@unique([importedFromFeedId, externalEventId])
 }
 
 model Payment {
@@ -144,9 +150,13 @@ model IcalFeed {
   name         String
   source       String
   url          String
+  roomId       String?
+  room         Room?     @relation(fields: [roomId], references: [id])
   active       Boolean   @default(true)
   lastSyncedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([roomId])
 }

@@ -10,6 +10,7 @@ type IcalFeedPayload = {
   id?: string
   name?: string
   source?: IcalFeed["source"]
+  roomId?: string
   url?: string
   active?: boolean
 }
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
   const data = {
     name,
     source: payload.source,
+    roomId: payload.roomId || null,
     url,
     active: payload.active ?? true,
   }
@@ -63,7 +65,12 @@ export async function POST(request: Request) {
       })
     : await prisma.icalFeed.create({ data })
 
-  return NextResponse.json(serializeIcalFeed(feed))
+  const savedFeed = await prisma.icalFeed.findUniqueOrThrow({
+    where: { id: feed.id },
+    include: { room: true },
+  })
+
+  return NextResponse.json(serializeIcalFeed(savedFeed))
 }
 
 export async function DELETE(request: Request) {

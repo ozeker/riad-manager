@@ -2,7 +2,14 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { LinkIcon, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
+import {
+  LinkIcon,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
@@ -41,7 +48,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { IcalFeed } from "@/lib/types"
+import type { IcalFeed, Room } from "@/lib/types"
 
 type IcalFeedDraft = Omit<IcalFeed, "id" | "lastSyncedAt"> & {
   id?: string
@@ -50,6 +57,14 @@ type IcalFeedDraft = Omit<IcalFeed, "id" | "lastSyncedAt"> & {
 
 type IcalFeedManagerProps = {
   feeds: IcalFeed[]
+  rooms: Room[]
+}
+
+type IcalImportResult = {
+  imported: number
+  updated: number
+  skipped: number
+  errors: number
 }
 
 const sources: IcalFeed["source"][] = [
@@ -62,6 +77,8 @@ const sources: IcalFeed["source"][] = [
 const emptyFeed: IcalFeedDraft = {
   name: "",
   source: "Booking.com",
+  roomId: "",
+  roomName: "",
   url: "",
   active: true,
 }
@@ -77,12 +94,16 @@ function formatLastSynced(value: string) {
   }).format(new Date(value))
 }
 
-export function IcalFeedManager({ feeds: initialFeeds }: IcalFeedManagerProps) {
+export function IcalFeedManager({
+  feeds: initialFeeds,
+  rooms,
+}: IcalFeedManagerProps) {
   const router = useRouter()
   const [feeds, setFeeds] = useState(initialFeeds)
   const [draft, setDraft] = useState<IcalFeedDraft>(emptyFeed)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [importing, setImporting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   function openCreate() {
@@ -194,6 +215,33 @@ export function IcalFeedManager({ feeds: initialFeeds }: IcalFeedManagerProps) {
     }
   }
 
+  async function importActiveFeeds() {
+    setImporting(true)
+    try {
+      const response = await fetch("/api/ical-import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      })
+
+      if (!response.ok) {
+        throw new Error("Could not import iCal feeds.")
+      }
+
+      const result = (await response.json()) as IcalImportResult
+      toast.success(
+        `Imported ${result.imported}, updated ${result.updated}, skipped ${result.skipped}.`
+      )
+      router.refresh()
+    } catch {
+      toast.error("The iCal import could not be completed.")
+    } finally {
+      setImporting(false)
+    }
+  }
+
   return (
     <>
       <Card className="rounded-lg border-border/80 shadow-none">
@@ -204,10 +252,21 @@ export function IcalFeedManager({ feeds: initialFeeds }: IcalFeedManagerProps) {
               Store external calendar URLs now. Reservation syncing comes later.
             </p>
           </div>
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="size-4" />
-            Add feed
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={importActiveFeeds}
+              disabled={importing || feeds.length === 0}
+            >
+              <RefreshCw className="size-4" />
+              {importing ? "Importing..." : "Import feeds"}
+            </Button>
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="size-4" />
+              Add feed
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -215,6 +274,7 @@ export function IcalFeedManager({ feeds: initialFeeds }: IcalFeedManagerProps) {
               <TableRow>
                 <TableHead>Feed</TableHead>
                 <TableHead>Source</TableHead>
+                <TableHead>Room</TableHead>
                 <TableHead>URL</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last synced</TableHead>
@@ -228,6 +288,7 @@ export function IcalFeedManager({ feeds: initialFeeds }: IcalFeedManagerProps) {
                   <TableCell>
                     <Badge variant="outline">{feed.source}</Badge>
                   </TableCell>
+                  <TableCell>{feed.roomName || "Unassigned"}</TableCell>
                   <TableCell>
                     <a
                       href={feed.url}
@@ -283,7 +344,7 @@ export function IcalFeedManager({ feeds: initialFeeds }: IcalFeedManagerProps) {
               {feeds.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="h-24 text-center text-muted-foreground"
                   >
                     No iCal feeds yet.
@@ -331,6 +392,28 @@ export function IcalFeedManager({ feeds: initialFeeds }: IcalFeedManagerProps) {
                   {sources.map((source) => (
                     <SelectItem key={source} value={source}>
                       {source}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Room</Label>
+              <Select
+                value={draft.roomId || "unassigned"}
+                onValueChange={(roomId) =>
+                  updateDraft("roomId", roomId === "unassigned" ? "" : roomId)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose room" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {rooms.map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
+                      {room.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -75,6 +75,8 @@ export type IcalFeed = {
   id: string
   name: string
   source: "Booking.com" | "Airbnb" | "HotelRunner" | "Other"
+  roomId: string
+  roomName: string
   url: string
   active: boolean
   lastSyncedAt: string

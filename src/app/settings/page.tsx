@@ -55,7 +55,7 @@ export default async function SettingsPage() {
 
         <RoomManager rooms={rooms} />
         <div className="xl:col-span-2">
-          <IcalFeedManager feeds={feeds} />
+          <IcalFeedManager feeds={feeds} rooms={rooms} />
         </div>
       </div>
     </>

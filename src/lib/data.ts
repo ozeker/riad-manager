@@ -50,6 +50,8 @@ type IcalFeedRow = {
   id: string
   name: string
   source: string
+  roomId: string | null
+  room: { name: string } | null
   url: string
   active: boolean
   lastSyncedAt: Date | null
@@ -128,6 +130,8 @@ export function serializeIcalFeed(feed: IcalFeedRow): IcalFeed {
     id: feed.id,
     name: feed.name,
     source: feed.source as IcalFeed["source"],
+    roomId: feed.roomId ?? "",
+    roomName: feed.room?.name ?? "",
     url: feed.url,
     active: feed.active,
     lastSyncedAt: feed.lastSyncedAt ? feed.lastSyncedAt.toISOString() : "",
@@ -224,6 +228,7 @@ export async function getCashMovements(): Promise<CashMovement[]> {
 
 export async function getIcalFeeds(): Promise<IcalFeed[]> {
   const rows = await prisma.icalFeed.findMany({
+    include: { room: true },
     orderBy: { createdAt: "asc" },
   })
 
