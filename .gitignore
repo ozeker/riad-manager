@@ -98,9 +98,5 @@ next-env.d.ts
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# local database
-/prisma/dev.db
-/prisma/dev.db-*
-
 # generated Prisma client
 /src/generated/prisma

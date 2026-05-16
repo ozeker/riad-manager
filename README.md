@@ -2,7 +2,7 @@
 
 Riad Manager is a simple internal management web app for a small Moroccan riad owner.
 
-This repository is currently at the project setup stage. The app is scaffolded with:
+This repository contains the Riad Manager MVP beta. The app is built with:
 
 - Next.js App Router
 - TypeScript
@@ -34,7 +34,7 @@ http://localhost:3000
 ## Local Environment
 
 Create `.env` from `.env.example` and keep it private. This file is ignored by
-Git because it contains the local database path and owner login secrets.
+Git because it contains database URLs and owner login secrets.
 
 Required values:
 
@@ -92,6 +92,8 @@ Project planning documents live in `docs/`:
 - `docs/BRD.md`
 - `docs/OWNER_ACCEPTANCE_TESTING.md`
 - `docs/OWNER_ACCEPTANCE_TESTING.xlsx`
+- `docs/BETA_OWNER_TESTING_GUIDE.md`
+- `docs/BETA_OWNER_MESSAGE.md`
 - `docs/PRD.md`
 - `docs/MVP_SCOPE.md`
 - `docs/SAMPLE_DATA.md`

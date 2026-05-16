@@ -7,8 +7,8 @@ Riad Manager now uses PostgreSQL through Prisma.
 For beta, PostgreSQL is expected to be hosted by Supabase and the Next.js app is
 expected to be hosted by Vercel.
 
-The previous SQLite setup was for temporary local MVP development only. The
-temporary local data is not part of the beta migration.
+The previous local development database was temporary only. The temporary local
+data is not part of the beta migration.
 
 ## Runtime Connections
 

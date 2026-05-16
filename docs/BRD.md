@@ -56,16 +56,19 @@ The owner needs to:
 
 ## Current MVP Status
 
-Status: MVP candidate.
+Status: MVP beta candidate.
 
-The current app is ready for owner acceptance testing.
+The current app is deployed through Vercel and uses Supabase PostgreSQL for
+persistent beta data.
+
+It is ready for owner acceptance testing.
 
 It is not yet considered fully production-hardened until:
 
 - real property data is entered
 - real iCal feeds are tested
 - the owner completes a manual workflow test
-- deployment and backup strategy are confirmed
+- backup/export routine is confirmed
 
 ## Current Functional Requirements
 
