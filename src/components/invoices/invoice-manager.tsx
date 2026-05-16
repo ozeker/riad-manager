@@ -2,7 +2,14 @@
 
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { FileText, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
+import {
+  Download,
+  FileText,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
@@ -422,6 +429,12 @@ export function InvoiceManager({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <a href={`/api/invoices/pdf?id=${invoice.id}`}>
+                            <Download className="size-4" />
+                            Draft PDF
+                          </a>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openEdit(invoice)}>
                           <Pencil className="size-4" />
                           Edit draft
