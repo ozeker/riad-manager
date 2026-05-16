@@ -68,3 +68,5 @@ Before a wider production launch, migrate from SQLite to PostgreSQL.
 
 That will make deployment easier on managed platforms and reduce the risk of
 filesystem persistence problems.
+
+See `docs/POSTGRESQL_MIGRATION.md` for the migration prep plan.

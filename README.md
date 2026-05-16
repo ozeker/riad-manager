@@ -90,4 +90,5 @@ Project planning documents live in `docs/`:
 - `docs/SAMPLE_DATA.md`
 - `docs/CODEX_PROMPTS.md`
 - `docs/DEPLOYMENT.md`
+- `docs/POSTGRESQL_MIGRATION.md`
 - `docs/PRODUCTION_MVP_CHECKLIST.md`

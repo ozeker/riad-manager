@@ -12,6 +12,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:postgres:validate": "prisma validate --schema prisma/postgres.schema.prisma",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "test:mvp": "node scripts/mvp-smoke-test.mjs"
