@@ -70,6 +70,16 @@ Open Prisma Studio:
 npm run db:studio
 ```
 
+## Deployment
+
+Deployment notes live in `docs/DEPLOYMENT.md`.
+
+Before deploying, run:
+
+```bash
+npm run verify
+```
+
 ## Documentation
 
 Project planning documents live in `docs/`:
@@ -78,3 +88,4 @@ Project planning documents live in `docs/`:
 - `docs/MVP_SCOPE.md`
 - `docs/SAMPLE_DATA.md`
 - `docs/CODEX_PROMPTS.md`
+- `docs/DEPLOYMENT.md`
