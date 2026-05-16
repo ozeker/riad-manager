@@ -496,6 +496,54 @@ Future improvements:
 - owner profile settings
 - app language settings
 
+### 13. Communications
+
+Communications are not part of the current MVP.
+
+The owner has expressed a future need to view and respond to riad emails while away from the local riad PC.
+
+Current workaround:
+
+- owner sends from personal email
+- owner copies the riad email address
+
+This workaround is not ideal because:
+
+- guests receive replies from the wrong sender identity
+- sent messages are not reliably stored in the riad email account
+- guest conversation history is split across mailboxes
+- business continuity depends on the owner's personal inbox
+
+Future behavior:
+
+- connect the riad email account
+- view riad inbox inside Riad Manager
+- reply from the riad email address
+- save sent messages locally in Riad Manager
+- keep sent messages in the real email provider's Sent folder
+- link email conversations to guests and bookings
+- support reusable reply templates
+
+Possible technical options:
+
+- Gmail or Google Workspace OAuth
+- Outlook or Microsoft 365 OAuth
+- IMAP/SMTP as a fallback if the email provider requires it
+
+Implementation priority:
+
+- first deploy Riad Manager securely for remote access
+- then test whether the owner can use normal webmail/phone mail app
+- add an in-app Communications module only if email remains a major daily pain
+
+Acceptance checks for a future version:
+
+- owner can connect the riad mailbox
+- inbox messages can be viewed after login
+- replies are sent from the riad email address
+- sent replies are stored locally and in the email provider's sent folder
+- email thread can be linked to guest or booking
+
 ## Non-Functional Requirements
 
 ### Usability
@@ -533,6 +581,7 @@ The following are not part of the current MVP:
 - receptionist account
 - multi-user permissions
 - mobile app
+- email client / communications module
 - WhatsApp integration
 - online payment collection
 - full channel manager
@@ -553,6 +602,7 @@ The following are not part of the current MVP:
 4. Real iCal feed testing.
 5. Accountant review of invoice PDF.
 6. Backup/export-all workflow.
+7. Remote beta access for the riad owner.
 
 ### Medium-Term Improvements
 
@@ -562,6 +612,7 @@ The following are not part of the current MVP:
 4. Better calendar navigation.
 5. Guest document storage.
 6. Scheduled iCal imports.
+7. Communications module for riad email.
 
 ### Long-Term Improvements
 
