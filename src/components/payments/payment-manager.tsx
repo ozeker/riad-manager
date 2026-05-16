@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -103,6 +104,7 @@ export function PaymentManager({
   rooms,
 }: PaymentManagerProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [payments, setPayments] = useState(initialPayments)
   const [draft, setDraft] = useState<PaymentDraft>(() =>
     createEmptyPayment(bookings)
@@ -136,12 +138,12 @@ export function PaymentManager({
 
   async function savePayment() {
     if (!draft.bookingId) {
-      toast.error("Choose a booking before saving.")
+      toast.error(t("Choose a booking before saving."))
       return
     }
 
     if (!draft.amount || Number(draft.amount) <= 0) {
-      toast.error("Payment amount must be greater than zero.")
+      toast.error(t("Payment amount must be greater than zero."))
       return
     }
 
@@ -156,7 +158,7 @@ export function PaymentManager({
       })
 
       if (!response.ok) {
-        throw new Error("Could not save payment.")
+        throw new Error(t("Could not save payment."))
       }
 
       const savedPayment = (await response.json()) as Payment
@@ -172,11 +174,11 @@ export function PaymentManager({
         return [savedPayment, ...current]
       })
 
-      toast.success(draft.id ? "Payment updated" : "Payment recorded")
+      toast.success(draft.id ? t("Payment updated") : t("Payment recorded"))
       setOpen(false)
       router.refresh()
     } catch {
-      toast.error("The payment could not be saved.")
+      toast.error(t("The payment could not be saved."))
     } finally {
       setSaving(false)
     }
@@ -190,16 +192,16 @@ export function PaymentManager({
       })
 
       if (!response.ok) {
-        throw new Error("Could not delete payment.")
+        throw new Error(t("Could not delete payment."))
       }
 
       setPayments((current) =>
         current.filter((item) => item.id !== payment.id)
       )
-      toast.success("Payment deleted")
+      toast.success(t("Payment deleted"))
       router.refresh()
     } catch {
-      toast.error("The payment could not be deleted.")
+      toast.error(t("The payment could not be deleted."))
     } finally {
       setDeletingId(null)
     }
@@ -212,7 +214,7 @@ export function PaymentManager({
           <Card key={currency} className="rounded-lg border-border/80 shadow-none">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">
-                {currency} collected
+                {currency} {t("collected")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -227,7 +229,7 @@ export function PaymentManager({
       <div className="mb-4 flex justify-end">
         <Button onClick={openCreate} disabled={bookings.length === 0}>
           <Plus className="size-4" />
-          Record payment
+          {t("Record payment")}
         </Button>
       </div>
 
@@ -236,12 +238,12 @@ export function PaymentManager({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Guest</TableHead>
-                <TableHead>Booking</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Notes</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>{t("Guest")}</TableHead>
+                <TableHead>{t("Booking")}</TableHead>
+                <TableHead>{t("Date")}</TableHead>
+                <TableHead>{t("Method")}</TableHead>
+                <TableHead>{t("Notes")}</TableHead>
+                <TableHead className="text-right">{t("Amount")}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -255,11 +257,11 @@ export function PaymentManager({
                       {payment.guestName}
                     </TableCell>
                     <TableCell>
-                      {booking ? getBookingLabel(booking, rooms) : "Unknown booking"}
+                      {booking ? getBookingLabel(booking, rooms) : t("Unknown booking")}
                     </TableCell>
                     <TableCell>{payment.paymentDate}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{payment.method}</Badge>
+                      <Badge variant="outline">{t(payment.method)}</Badge>
                     </TableCell>
                     <TableCell>{payment.notes || "-"}</TableCell>
                     <TableCell className="text-right">
@@ -278,7 +280,7 @@ export function PaymentManager({
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openEdit(payment)}>
                             <Pencil className="size-4" />
-                            Edit
+                            {t("Edit")}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -286,7 +288,7 @@ export function PaymentManager({
                             disabled={deletingId === payment.id}
                           >
                             <Trash2 className="size-4" />
-                            {deletingId === payment.id ? "Deleting..." : "Delete"}
+                            {deletingId === payment.id ? t("Deleting...") : t("Delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -303,17 +305,16 @@ export function PaymentManager({
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {draft.id ? "Edit payment" : "Record payment"}
+              {draft.id ? t("Edit payment") : t("Record payment")}
             </DialogTitle>
             <DialogDescription>
-              Payments are saved to the PostgreSQL database and update booking
-              payment status.
+              {t("Payments are saved to the PostgreSQL database and update booking payment status.")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-2 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label>Booking</Label>
+              <Label>{t("Booking")}</Label>
               <Select
                 value={draft.bookingId}
                 onValueChange={(bookingId) => {
@@ -326,7 +327,7 @@ export function PaymentManager({
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose booking" />
+                  <SelectValue placeholder={t("Choose booking")} />
                 </SelectTrigger>
                 <SelectContent>
                   {bookings.map((booking) => (
@@ -339,7 +340,7 @@ export function PaymentManager({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">{t("Amount")}</Label>
               <Input
                 id="amount"
                 type="number"
@@ -352,7 +353,7 @@ export function PaymentManager({
             </div>
 
             <div className="space-y-2">
-              <Label>Currency</Label>
+              <Label>{t("Currency")}</Label>
               <Select
                 value={draft.currency}
                 onValueChange={(currency: Currency) =>
@@ -360,7 +361,7 @@ export function PaymentManager({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Currency" />
+                  <SelectValue placeholder={t("Currency")} />
                 </SelectTrigger>
                 <SelectContent>
                   {currencies.map((currency) => (
@@ -373,7 +374,7 @@ export function PaymentManager({
             </div>
 
             <div className="space-y-2">
-              <Label>Method</Label>
+              <Label>{t("Method")}</Label>
               <Select
                 value={draft.method}
                 onValueChange={(method: Payment["method"]) =>
@@ -381,12 +382,12 @@ export function PaymentManager({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Method" />
+                  <SelectValue placeholder={t("Method")} />
                 </SelectTrigger>
                 <SelectContent>
                   {methods.map((method) => (
                     <SelectItem key={method} value={method}>
-                      {method}
+                      {t(method)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -394,7 +395,7 @@ export function PaymentManager({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="paymentDate">Payment date</Label>
+              <Label htmlFor="paymentDate">{t("Payment date")}</Label>
               <Input
                 id="paymentDate"
                 type="date"
@@ -406,11 +407,11 @@ export function PaymentManager({
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t("Notes")}</Label>
               <Textarea
                 id="notes"
                 value={draft.notes}
-                placeholder="Cash received, card terminal reference, OTA payout note"
+                placeholder={t("Cash received, card terminal reference, OTA payout note")}
                 onChange={(event) => updateDraft("notes", event.target.value)}
               />
             </div>
@@ -422,10 +423,10 @@ export function PaymentManager({
               onClick={() => setOpen(false)}
               disabled={saving}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={savePayment} disabled={saving}>
-              {saving ? "Saving..." : "Save payment"}
+              {saving ? t("Saving...") : t("Save payment")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -7,10 +7,14 @@ import { PropertyManager } from "@/components/settings/property-manager"
 import { RoomManager } from "@/components/settings/room-manager"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getIcalFeeds, getProperty, getRooms } from "@/lib/data"
+import { translate } from "@/lib/i18n"
+import { getRequestLocale } from "@/lib/i18n-server"
 
 export const dynamic = "force-dynamic"
 
 export default async function SettingsPage() {
+  const locale = await getRequestLocale()
+  const t = (text: string) => translate(locale, text)
   const [property, rooms, feeds] = await Promise.all([
     getProperty(),
     getRooms(),
@@ -20,9 +24,9 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Setup"
-        title="Settings"
-        description="Manage the property profile and room setup used by bookings and the reservation calendar."
+        eyebrow={t("Setup")}
+        title={t("Settings")}
+        description={t("Manage the property profile and room setup used by bookings and the reservation calendar.")}
       />
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <PropertyManager property={property} />
@@ -34,16 +38,16 @@ export default async function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <DatabaseBackup className="size-4" />
-              Backup exports
+              {t("Backup exports")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-              <ExportCsvButton dataset="bookings" label="Bookings" />
-              <ExportCsvButton dataset="guests" label="Guests" />
-              <ExportCsvButton dataset="payments" label="Payments" />
-              <ExportCsvButton dataset="invoices" label="Invoices" />
-              <ExportCsvButton dataset="cash-movements" label="Cash" />
+              <ExportCsvButton dataset="bookings" label={t("Bookings")} />
+              <ExportCsvButton dataset="guests" label={t("Guests")} />
+              <ExportCsvButton dataset="payments" label={t("Payments")} />
+              <ExportCsvButton dataset="invoices" label={t("Invoices")} />
+              <ExportCsvButton dataset="cash-movements" label={t("Cash")} />
             </div>
           </CardContent>
         </Card>

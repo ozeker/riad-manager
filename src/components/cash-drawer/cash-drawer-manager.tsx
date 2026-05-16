@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -113,6 +114,7 @@ export function CashDrawerManager({
   movements: initialMovements,
 }: CashDrawerManagerProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [movements, setMovements] = useState(initialMovements)
   const [selectedDate, setSelectedDate] = useState(
     initialMovements[0]?.date ?? todayString()
@@ -162,12 +164,12 @@ export function CashDrawerManager({
 
   async function saveMovement() {
     if (!draft.date || !draft.category.trim()) {
-      toast.error("Date and category are required.")
+      toast.error(t("Date and category are required."))
       return
     }
 
     if (Number(draft.amount) < 0) {
-      toast.error("Amount cannot be negative.")
+      toast.error(t("Amount cannot be negative."))
       return
     }
 
@@ -182,7 +184,7 @@ export function CashDrawerManager({
       })
 
       if (!response.ok) {
-        throw new Error("Could not save cash movement.")
+        throw new Error(t("Could not save cash movement."))
       }
 
       const savedMovement = (await response.json()) as CashMovement
@@ -199,11 +201,11 @@ export function CashDrawerManager({
       })
 
       setSelectedDate(savedMovement.date)
-      toast.success(draft.id ? "Cash movement updated" : "Cash movement added")
+      toast.success(draft.id ? t("Cash movement updated") : t("Cash movement added"))
       setOpen(false)
       router.refresh()
     } catch {
-      toast.error("The cash movement could not be saved.")
+      toast.error(t("The cash movement could not be saved."))
     } finally {
       setSaving(false)
     }
@@ -217,16 +219,16 @@ export function CashDrawerManager({
       })
 
       if (!response.ok) {
-        throw new Error("Could not delete cash movement.")
+        throw new Error(t("Could not delete cash movement."))
       }
 
       setMovements((current) =>
         current.filter((item) => item.id !== movement.id)
       )
-      toast.success("Cash movement deleted")
+      toast.success(t("Cash movement deleted"))
       router.refresh()
     } catch {
-      toast.error("The cash movement could not be deleted.")
+      toast.error(t("The cash movement could not be deleted."))
     } finally {
       setDeletingId(null)
     }
@@ -237,7 +239,7 @@ export function CashDrawerManager({
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <Label htmlFor="drawerDate" className="text-sm text-muted-foreground">
-            Date
+            {t("Date")}
           </Label>
           <Input
             id="drawerDate"
@@ -255,7 +257,7 @@ export function CashDrawerManager({
         </div>
         <Button onClick={openCreate}>
           <Plus className="size-4" />
-          Cash movement
+          {t("Cash movement")}
         </Button>
       </div>
 
@@ -263,7 +265,7 @@ export function CashDrawerManager({
         <Card className="rounded-lg border-border/80 shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Opening balance
+              {t("Opening balance")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -275,7 +277,7 @@ export function CashDrawerManager({
         <Card className="rounded-lg border-border/80 shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Cash in
+              {t("Cash in")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -287,7 +289,7 @@ export function CashDrawerManager({
         <Card className="rounded-lg border-border/80 shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Cash out
+              {t("Cash out")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -299,7 +301,7 @@ export function CashDrawerManager({
         <Card className="rounded-lg border-border/80 shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Expected closing
+              {t("Expected closing")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -307,7 +309,7 @@ export function CashDrawerManager({
               {formatMoney(dailyTotals.expectedClosingBalance, "MAD")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Recorded: {formatMoney(dailyTotals.recordedClosingBalance, "MAD")}
+              {t("Recorded")}: {formatMoney(dailyTotals.recordedClosingBalance, "MAD")}
             </p>
           </CardContent>
         </Card>
@@ -318,10 +320,10 @@ export function CashDrawerManager({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Notes</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>{t("Type")}</TableHead>
+                <TableHead>{t("Category")}</TableHead>
+                <TableHead>{t("Notes")}</TableHead>
+                <TableHead className="text-right">{t("Amount")}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -329,7 +331,7 @@ export function CashDrawerManager({
               {dailyMovements.map((movement) => (
                 <TableRow key={movement.id}>
                   <TableCell>
-                    <Badge variant="outline">{movement.type}</Badge>
+                    <Badge variant="outline">{t(movement.type)}</Badge>
                   </TableCell>
                   <TableCell>{movement.category}</TableCell>
                   <TableCell>{movement.notes || "-"}</TableCell>
@@ -349,7 +351,7 @@ export function CashDrawerManager({
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openEdit(movement)}>
                           <Pencil className="size-4" />
-                          Edit
+                          {t("Edit")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -357,7 +359,7 @@ export function CashDrawerManager({
                           disabled={deletingId === movement.id}
                         >
                           <Trash2 className="size-4" />
-                          {deletingId === movement.id ? "Deleting..." : "Delete"}
+                          {deletingId === movement.id ? t("Deleting...") : t("Delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -370,7 +372,7 @@ export function CashDrawerManager({
                     colSpan={5}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No cash movements for this date.
+                    {t("No cash movements for this date.")}
                   </TableCell>
                 </TableRow>
               ) : null}
@@ -383,16 +385,16 @@ export function CashDrawerManager({
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {draft.id ? "Edit cash movement" : "Cash movement"}
+              {draft.id ? t("Edit cash movement") : t("Cash movement")}
             </DialogTitle>
             <DialogDescription>
-              Cash drawer entries are MAD-only for this milestone.
+              {t("Cash drawer entries are MAD-only for this milestone.")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-2 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="movementDate">Date</Label>
+              <Label htmlFor="movementDate">{t("Date")}</Label>
               <Input
                 id="movementDate"
                 type="date"
@@ -402,7 +404,7 @@ export function CashDrawerManager({
             </div>
 
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>{t("Type")}</Label>
               <Select
                 value={draft.type}
                 onValueChange={(type: CashMovement["type"]) =>
@@ -410,12 +412,12 @@ export function CashDrawerManager({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Type" />
+                  <SelectValue placeholder={t("Type")} />
                 </SelectTrigger>
                 <SelectContent>
                   {movementTypes.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type}
+                      {t(type)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -423,7 +425,7 @@ export function CashDrawerManager({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">{t("Category")}</Label>
               <Input
                 id="category"
                 value={draft.category}
@@ -439,7 +441,7 @@ export function CashDrawerManager({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount MAD</Label>
+              <Label htmlFor="amount">{t("Amount MAD")}</Label>
               <Input
                 id="amount"
                 type="number"
@@ -452,11 +454,11 @@ export function CashDrawerManager({
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t("Notes")}</Label>
               <Textarea
                 id="notes"
                 value={draft.notes}
-                placeholder="Supplier name, receipt number, or reconciliation note"
+                placeholder={t("Supplier name, receipt number, or reconciliation note")}
                 onChange={(event) => updateDraft("notes", event.target.value)}
               />
             </div>
@@ -468,10 +470,10 @@ export function CashDrawerManager({
               onClick={() => setOpen(false)}
               disabled={saving}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={saveMovement} disabled={saving}>
-              {saving ? "Saving..." : "Save movement"}
+              {saving ? t("Saving...") : t("Save movement")}
             </Button>
           </DialogFooter>
         </DialogContent>

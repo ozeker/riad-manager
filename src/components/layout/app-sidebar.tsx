@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -60,6 +61,7 @@ function Brand() {
 
 function SidebarLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
+  const { t } = useLanguage()
 
   return (
     <nav className="space-y-1">
@@ -80,7 +82,7 @@ function SidebarLinks({ onNavigate }: { onNavigate?: () => void }) {
             )}
           >
             <Icon className="size-4 shrink-0" />
-            <span className="truncate">{item.label}</span>
+            <span className="truncate">{t(item.label)}</span>
           </Link>
         )
       })}
@@ -89,15 +91,16 @@ function SidebarLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function SidebarFooter() {
+  const { t } = useLanguage()
+
   return (
     <div className="rounded-lg border bg-background p-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium text-muted-foreground">Owner app</p>
-        <Badge variant="secondary">Local MVP</Badge>
+        <p className="text-xs font-medium text-muted-foreground">{t("Owner app")}</p>
+        <Badge variant="secondary">{t("Local MVP")}</Badge>
       </div>
       <p className="mt-2 text-xs leading-5 text-muted-foreground">
-        Single-owner access is enabled. Keep the owner password and auth secret
-        private before deployment.
+        {t("Single-owner access is enabled. Keep the owner password and auth secret private before deployment.")}
       </p>
     </div>
   )

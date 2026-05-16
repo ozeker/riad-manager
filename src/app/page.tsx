@@ -29,6 +29,8 @@ import {
   getProperty,
   getRooms,
 } from "@/lib/data"
+import { translate } from "@/lib/i18n"
+import { getRequestLocale } from "@/lib/i18n-server"
 import type { Booking, CashMovement, Currency, Payment } from "@/lib/types"
 
 export const dynamic = "force-dynamic"
@@ -89,6 +91,8 @@ function getCashPosition(cashMovements: CashMovement[]) {
 }
 
 export default async function DashboardPage() {
+  const locale = await getRequestLocale()
+  const t = (text: string) => translate(locale, text)
   const [rooms, bookings, payments, cashMovements, invoices, property] =
     await Promise.all([
     getRooms(),
@@ -138,39 +142,39 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Today"
-        title="Riad operations dashboard"
-        description="A calm overview of bookings, rooms, payments, and cash for the owner."
+        eyebrow={t("Today")}
+        title={t("Riad operations dashboard")}
+        description={t("A calm overview of bookings, rooms, payments, and cash for the owner.")}
         badge={property?.name ?? "Riad Manager"}
-        action={<Button>Manual booking</Button>}
+        action={<Button>{t("Manual booking")}</Button>}
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="Occupied today"
+          title={t("Occupied today")}
           value={`${occupiedRoomCount}/${activeRoomCount}`}
-          detail={`${occupancyPercent}% occupancy across active rooms`}
+          detail={`${occupancyPercent}% ${t("occupancy across active rooms")}`}
           icon={Hotel}
           tone="blue"
         />
         <StatCard
-          title="Upcoming arrivals"
+          title={t("Upcoming arrivals")}
           value={`${upcomingBookings.length}`}
-          detail={`${arrivalsToday} arriving today`}
+          detail={`${arrivalsToday} ${t("arriving today")}`}
           icon={CalendarCheck}
           tone="green"
         />
         <StatCard
-          title="Cash position"
+          title={t("Cash position")}
           value={formatMoney(cashPositionMad, "MAD")}
-          detail="Latest closing balance or calculated drawer total"
+          detail={t("Latest closing balance or calculated drawer total")}
           icon={WalletCards}
           tone="amber"
         />
         <StatCard
-          title="Open balances"
+          title={t("Open balances")}
           value={`${bookingsWithOpenBalance.length}`}
-          detail={`${formatMoney(openBalanceTotalMad, "MAD")} still due in MAD bookings`}
+          detail={`${formatMoney(openBalanceTotalMad, "MAD")} ${t("still due in MAD bookings")}`}
           icon={CreditCard}
         />
       </div>
@@ -178,17 +182,17 @@ export default async function DashboardPage() {
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <Card className="rounded-lg border-border/80 shadow-none">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Upcoming arrivals</CardTitle>
+            <CardTitle className="text-base">{t("Upcoming arrivals")}</CardTitle>
             <Badge variant="secondary">{property?.name ?? "Riad Al Fes"}</Badge>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Guest</TableHead>
-                  <TableHead>Room</TableHead>
-                  <TableHead>Dates</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>{t("Guest")}</TableHead>
+                  <TableHead>{t("Room")}</TableHead>
+                  <TableHead>{t("Dates")}</TableHead>
+                  <TableHead className="text-right">{t("Amount")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -201,12 +205,12 @@ export default async function DashboardPage() {
                       <TableCell className="font-medium">{booking.guestName}</TableCell>
                       <TableCell>{room?.name}</TableCell>
                       <TableCell>
-                        {booking.checkIn} to {booking.checkOut}
+                        {booking.checkIn} {t("to")} {booking.checkOut}
                       </TableCell>
                       <TableCell className="text-right">
                         {balance > 0
                           ? formatMoney(balance, booking.currency)
-                          : "Paid"}
+                          : t("Paid")}
                       </TableCell>
                     </TableRow>
                   )
@@ -217,7 +221,7 @@ export default async function DashboardPage() {
                       colSpan={4}
                       className="py-6 text-center text-sm text-muted-foreground"
                     >
-                      No upcoming arrivals.
+                      {t("No upcoming arrivals.")}
                     </TableCell>
                   </TableRow>
                 ) : null}
@@ -228,18 +232,18 @@ export default async function DashboardPage() {
 
         <Card className="rounded-lg border-border/80 shadow-none">
           <CardHeader>
-            <CardTitle className="text-base">Owner focus</CardTitle>
+            <CardTitle className="text-base">{t("Owner focus")}</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="cash" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="cash">Cash</TabsTrigger>
-                <TabsTrigger value="invoices">Invoices</TabsTrigger>
-                <TabsTrigger value="export">Export</TabsTrigger>
+                <TabsTrigger value="cash">{t("Cash")}</TabsTrigger>
+                <TabsTrigger value="invoices">{t("Invoices")}</TabsTrigger>
+                <TabsTrigger value="export">{t("Export")}</TabsTrigger>
               </TabsList>
               <TabsContent value="cash" className="mt-4 space-y-3 text-sm">
                 <p className="leading-6 text-muted-foreground">
-                  Current MAD drawer position is{" "}
+                  {t("Current MAD drawer position is")}{" "}
                   <span className="font-medium text-foreground">
                     {formatMoney(cashPositionMad, "MAD")}
                   </span>
@@ -252,7 +256,7 @@ export default async function DashboardPage() {
                       className="flex items-center justify-between rounded-md border px-3 py-2"
                     >
                       <span className="truncate text-muted-foreground">
-                        {movement.date} · {movement.type}
+                        {movement.date} - {t(movement.type)}
                       </span>
                       <span className="font-medium">
                         {formatMoney(movement.amount, "MAD")}
@@ -263,29 +267,28 @@ export default async function DashboardPage() {
               </TabsContent>
               <TabsContent value="invoices" className="mt-4 space-y-3 text-sm">
                 <p className="leading-6 text-muted-foreground">
-                  There are{" "}
+                  {t("There are")}{" "}
                   <span className="font-medium text-foreground">
                     {draftInvoiceCount}
                   </span>{" "}
-                  invoice drafts waiting for review.
+                  {t("invoice drafts waiting for review.")}
                 </p>
                 <Badge variant="outline">
-                  {invoices.length} invoices total
+                  {invoices.length} {t("invoices total")}
                 </Badge>
               </TabsContent>
               <TabsContent value="export" className="mt-4 space-y-3 text-sm">
                 <p className="leading-6 text-muted-foreground">
-                  The owner should always be able to export clean CSV records
-                  for bookings, guests, payments, invoices, and cash.
+                  {t("Clean CSV records for bookings, guests, payments, invoices, and cash.")}
                 </p>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <ExportCsvButton dataset="bookings" label="Bookings CSV" />
-                  <ExportCsvButton dataset="guests" label="Guests CSV" />
-                  <ExportCsvButton dataset="payments" label="Payments CSV" />
-                  <ExportCsvButton dataset="invoices" label="Invoices CSV" />
+                  <ExportCsvButton dataset="bookings" label={t("Bookings CSV")} />
+                  <ExportCsvButton dataset="guests" label={t("Guests CSV")} />
+                  <ExportCsvButton dataset="payments" label={t("Payments CSV")} />
+                  <ExportCsvButton dataset="invoices" label={t("Invoices CSV")} />
                   <ExportCsvButton
                     dataset="cash-movements"
-                    label="Cash CSV"
+                    label={t("Cash CSV")}
                   />
                 </div>
               </TabsContent>

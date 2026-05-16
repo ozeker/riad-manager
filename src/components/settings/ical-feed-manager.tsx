@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -120,6 +121,7 @@ export function IcalFeedManager({
   rooms,
 }: IcalFeedManagerProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [feeds, setFeeds] = useState(initialFeeds)
   const [draft, setDraft] = useState<IcalFeedDraft>(emptyFeed)
   const [open, setOpen] = useState(false)
@@ -146,7 +148,7 @@ export function IcalFeedManager({
 
   async function persistFeed(nextDraft: IcalFeedDraft) {
     if (!nextDraft.name.trim() || !nextDraft.url.trim()) {
-      toast.error("Feed name and URL are required.")
+      toast.error(t("Feed name and URL are required."))
       throw new Error("Feed name and URL are required.")
     }
 
@@ -159,7 +161,7 @@ export function IcalFeedManager({
     })
 
     if (!response.ok) {
-      throw new Error("Could not save iCal feed.")
+      throw new Error(t("Could not save iCal feed."))
     }
 
     const savedFeed = (await response.json()) as IcalFeed
@@ -183,7 +185,7 @@ export function IcalFeedManager({
     setSaving(true)
     try {
       await persistFeed(nextDraft)
-      toast.success(nextDraft.id ? "iCal feed updated" : "iCal feed added")
+      toast.success(nextDraft.id ? t("iCal feed updated") : t("iCal feed added"))
       setOpen(false)
     } catch (error) {
       if (
@@ -192,7 +194,7 @@ export function IcalFeedManager({
       ) {
         return
       }
-      toast.error("The iCal feed could not be saved.")
+      toast.error(t("The iCal feed could not be saved."))
     } finally {
       setSaving(false)
     }
@@ -206,12 +208,12 @@ export function IcalFeedManager({
 
     try {
       await persistFeed(nextFeed)
-      toast.success(active ? "iCal feed activated" : "iCal feed paused")
+      toast.success(active ? t("iCal feed activated") : t("iCal feed paused"))
     } catch {
       setFeeds((current) =>
         current.map((item) => (item.id === feed.id ? feed : item))
       )
-      toast.error("The iCal feed status could not be saved.")
+      toast.error(t("The iCal feed status could not be saved."))
     }
   }
 
@@ -223,14 +225,14 @@ export function IcalFeedManager({
       })
 
       if (!response.ok) {
-        throw new Error("Could not delete iCal feed.")
+        throw new Error(t("Could not delete iCal feed."))
       }
 
       setFeeds((current) => current.filter((item) => item.id !== feed.id))
-      toast.success("iCal feed deleted")
+      toast.success(t("iCal feed deleted"))
       router.refresh()
     } catch {
-      toast.error("The iCal feed could not be deleted.")
+      toast.error(t("The iCal feed could not be deleted."))
     } finally {
       setDeletingId(null)
     }
@@ -248,7 +250,7 @@ export function IcalFeedManager({
       })
 
       if (!response.ok) {
-        throw new Error("Could not import iCal feeds.")
+        throw new Error(t("Could not import iCal feeds."))
       }
 
       const result = (await response.json()) as IcalImportResult
@@ -261,7 +263,7 @@ export function IcalFeedManager({
       }
       router.refresh()
     } catch {
-      toast.error("The iCal import could not be completed.")
+      toast.error(t("The iCal import could not be completed."))
     } finally {
       setImporting(false)
     }
@@ -272,9 +274,9 @@ export function IcalFeedManager({
       <Card className="rounded-lg border-border/80 shadow-none">
         <CardHeader className="flex flex-row items-center justify-between gap-3">
           <div>
-            <CardTitle className="text-base">iCal feeds</CardTitle>
+            <CardTitle className="text-base">{t("iCal feeds")}</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Import read-only reservations from Booking.com, Airbnb, and HotelRunner.
+              {t("Import read-only reservations from Booking.com, Airbnb, and HotelRunner.")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -285,11 +287,11 @@ export function IcalFeedManager({
               disabled={importing || feeds.length === 0}
             >
               <RefreshCw className="size-4" />
-              {importing ? "Importing..." : "Import feeds"}
+              {importing ? t("Importing...") : t("Import feeds")}
             </Button>
             <Button size="sm" onClick={openCreate}>
               <Plus className="size-4" />
-              Add feed
+              {t("Add feed")}
             </Button>
           </div>
         </CardHeader>
@@ -297,13 +299,13 @@ export function IcalFeedManager({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Feed</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Room</TableHead>
+                <TableHead>{t("Feed")}</TableHead>
+                <TableHead>{t("Source")}</TableHead>
+                <TableHead>{t("Room")}</TableHead>
                 <TableHead>URL</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last synced</TableHead>
-                <TableHead>Last result</TableHead>
+                <TableHead>{t("Status")}</TableHead>
+                <TableHead>{t("Last synced")}</TableHead>
+                <TableHead>{t("Last result")}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -314,7 +316,7 @@ export function IcalFeedManager({
                   <TableCell>
                     <Badge variant="outline">{feed.source}</Badge>
                   </TableCell>
-                  <TableCell>{feed.roomName || "Unassigned"}</TableCell>
+                  <TableCell>{feed.roomName || t("Unassigned")}</TableCell>
                   <TableCell>
                     <a
                       href={feed.url}
@@ -334,7 +336,7 @@ export function IcalFeedManager({
                         aria-label={`Set ${feed.name} active status`}
                       />
                       <Badge variant={feed.active ? "secondary" : "outline"}>
-                        {feed.active ? "Active" : "Paused"}
+                        {feed.active ? t("Active") : t("Paused")}
                       </Badge>
                     </div>
                   </TableCell>
@@ -342,7 +344,7 @@ export function IcalFeedManager({
                   <TableCell>
                     <div className="space-y-1">
                       <Badge variant={statusVariant(feed.lastImportStatus)}>
-                        {feed.lastImportStatus || "Never imported"}
+                        {feed.lastImportStatus ? t(feed.lastImportStatus) : t("Never imported")}
                       </Badge>
                       {feed.lastImportMessage ? (
                         <p className="max-w-[16rem] truncate text-xs text-muted-foreground">
@@ -364,14 +366,14 @@ export function IcalFeedManager({
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openEdit(feed)}>
                           <Pencil className="size-4" />
-                          Edit
+                          {t("Edit")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => importFeeds(feed.id)}
                           disabled={importing || !feed.active}
                         >
                           <RefreshCw className="size-4" />
-                          Import this feed
+                          {t("Import this feed")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -379,7 +381,7 @@ export function IcalFeedManager({
                           disabled={deletingId === feed.id}
                         >
                           <Trash2 className="size-4" />
-                          {deletingId === feed.id ? "Deleting..." : "Delete"}
+                          {deletingId === feed.id ? t("Deleting...") : t("Delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -392,7 +394,7 @@ export function IcalFeedManager({
                     colSpan={8}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No iCal feeds yet.
+                    {t("No iCal feeds yet.")}
                   </TableCell>
                 </TableRow>
               ) : null}
@@ -404,15 +406,15 @@ export function IcalFeedManager({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>{draft.id ? "Edit iCal feed" : "Add iCal feed"}</DialogTitle>
+            <DialogTitle>{draft.id ? t("Edit iCal feed") : t("Add iCal feed")}</DialogTitle>
             <DialogDescription>
-              Active feeds can be imported from the Settings page.
+              {t("Active feeds can be imported from the Settings page.")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-2 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="feedName">Feed name</Label>
+              <Label htmlFor="feedName">{t("Feed name")}</Label>
               <Input
                 id="feedName"
                 value={draft.name}
@@ -422,7 +424,7 @@ export function IcalFeedManager({
             </div>
 
             <div className="space-y-2">
-              <Label>Source</Label>
+              <Label>{t("Source")}</Label>
               <Select
                 value={draft.source}
                 onValueChange={(source: IcalFeed["source"]) =>
@@ -430,12 +432,12 @@ export function IcalFeedManager({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Source" />
+                  <SelectValue placeholder={t("Source")} />
                 </SelectTrigger>
                 <SelectContent>
                   {sources.map((source) => (
                     <SelectItem key={source} value={source}>
-                      {source}
+                    {t(source)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -443,7 +445,7 @@ export function IcalFeedManager({
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label>Room</Label>
+              <Label>{t("Room")}</Label>
               <Select
                 value={draft.roomId || "unassigned"}
                 onValueChange={(roomId) =>
@@ -451,10 +453,10 @@ export function IcalFeedManager({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose room" />
+                  <SelectValue placeholder={t("Choose room")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">{t("Unassigned")}</SelectItem>
                   {rooms.map((room) => (
                     <SelectItem key={room.id} value={room.id}>
                       {room.name}
@@ -477,9 +479,9 @@ export function IcalFeedManager({
 
             <div className="flex items-end justify-between gap-4 rounded-lg border p-3 sm:col-span-2">
               <div className="space-y-1">
-                <Label htmlFor="feedActive">Active</Label>
+                <Label htmlFor="feedActive">{t("Active")}</Label>
                 <p className="text-xs text-muted-foreground">
-                  Active feeds will be included when syncing is added.
+                  {t("Active feeds will be included when syncing is added.")}
                 </p>
               </div>
               <Switch
@@ -496,10 +498,10 @@ export function IcalFeedManager({
               onClick={() => setOpen(false)}
               disabled={saving}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={() => saveFeed()} disabled={saving}>
-              {saving ? "Saving..." : "Save feed"}
+              {saving ? t("Saving...") : t("Save feed")}
             </Button>
           </DialogFooter>
         </DialogContent>

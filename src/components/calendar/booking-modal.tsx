@@ -5,6 +5,7 @@ import { differenceInCalendarDays, parseISO } from "date-fns"
 import { AlertTriangle, Archive, Ban } from "lucide-react"
 import { toast } from "sonner"
 
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -106,6 +107,7 @@ export function BookingModal({
   onCancelBooking,
   onDeleteBooking,
 }: BookingModalProps) {
+  const { t } = useLanguage()
   const fallbackRoomId = rooms[0]?.id ?? ""
   const fallbackDate = initialDate ?? "2026-06-01"
   const initialDraft =
@@ -117,7 +119,7 @@ export function BookingModal({
     "cancel" | "delete" | null
   >(null)
 
-  const mode = booking ? "Edit booking" : "Create booking"
+  const mode = booking ? t("Edit booking") : t("Create booking")
   const selectedGuestValue = draft.guestId || newGuestValue
   const isNewGuest = selectedGuestValue === newGuestValue
   const availabilityConflict = findBookingAvailabilityConflict(
@@ -134,20 +136,20 @@ export function BookingModal({
 
   async function handleSave() {
     if (!draft.guestId && !draft.guestName.trim()) {
-      toast.error("Choose an existing guest or add a new guest name.")
+      toast.error(t("Choose an existing guest or add a new guest name."))
       return
     }
 
     if (
       differenceInCalendarDays(parseISO(draft.checkOut), parseISO(draft.checkIn)) < 1
     ) {
-      toast.error("Check-out must be after check-in.")
+      toast.error(t("Check-out must be after check-in."))
       return
     }
 
     if (availabilityConflict) {
       toast.error(
-        `Room already booked for ${availabilityConflict.guestName} on those dates.`
+        `${t("Room already booked for")} ${availabilityConflict.guestName} ${t("on those dates.")}`
       )
       return
     }
@@ -162,7 +164,7 @@ export function BookingModal({
       })
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "The booking could not be saved."
+        error instanceof Error ? error.message : t("The booking could not be saved.")
       )
     } finally {
       setSaving(false)
@@ -176,7 +178,7 @@ export function BookingModal({
     try {
       await onCancelBooking(booking)
     } catch {
-      toast.error("The booking could not be cancelled.")
+      toast.error(t("The booking could not be cancelled."))
     } finally {
       setDestructiveAction(null)
     }
@@ -189,7 +191,7 @@ export function BookingModal({
     try {
       await onDeleteBooking(booking)
     } catch {
-      toast.error("The booking could not be archived.")
+      toast.error(t("The booking could not be archived."))
     } finally {
       setDestructiveAction(null)
     }
@@ -201,13 +203,13 @@ export function BookingModal({
         <DialogHeader>
           <DialogTitle>{mode}</DialogTitle>
           <DialogDescription>
-            Booking changes are saved to the PostgreSQL database.
+            {t("Booking changes are saved to the PostgreSQL database.")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label>Guest</Label>
+            <Label>{t("Guest")}</Label>
             <Select
               value={selectedGuestValue}
               onValueChange={(value) => {
@@ -223,10 +225,10 @@ export function BookingModal({
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose guest" />
+                <SelectValue placeholder={t("Choose guest")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={newGuestValue}>New guest</SelectItem>
+                <SelectItem value={newGuestValue}>{t("New guest")}</SelectItem>
                 {guests.map((guest) => (
                   <SelectItem key={guest.id} value={guest.id}>
                     {guest.fullName}
@@ -238,24 +240,24 @@ export function BookingModal({
 
           {isNewGuest ? (
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="guestName">New guest name</Label>
+              <Label htmlFor="guestName">{t("New guest name")}</Label>
               <Input
                 id="guestName"
                 value={draft.guestName}
-                placeholder="Guest full name"
+                placeholder={t("Guest full name")}
                 onChange={(event) => updateDraft("guestName", event.target.value)}
               />
             </div>
           ) : null}
 
           <div className="space-y-2">
-            <Label>Room</Label>
+            <Label>{t("Room")}</Label>
             <Select
               value={draft.roomId}
               onValueChange={(value) => updateDraft("roomId", value)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select room" />
+                <SelectValue placeholder={t("Select room")} />
               </SelectTrigger>
               <SelectContent>
                 {rooms.map((room) => (
@@ -268,7 +270,7 @@ export function BookingModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="guests">Guests</Label>
+            <Label htmlFor="guests">{t("Guests")}</Label>
             <Input
               id="guests"
               type="number"
@@ -279,7 +281,7 @@ export function BookingModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="checkIn">Check-in</Label>
+            <Label htmlFor="checkIn">{t("Check-in")}</Label>
             <Input
               id="checkIn"
               type="date"
@@ -289,7 +291,7 @@ export function BookingModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="checkOut">Check-out</Label>
+            <Label htmlFor="checkOut">{t("Check-out")}</Label>
             <Input
               id="checkOut"
               type="date"
@@ -299,18 +301,18 @@ export function BookingModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Source</Label>
+            <Label>{t("Source")}</Label>
             <Select
               value={draft.source}
               onValueChange={(value: BookingSource) => updateDraft("source", value)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select source" />
+                <SelectValue placeholder={t("Select source")} />
               </SelectTrigger>
               <SelectContent>
                 {sources.map((source) => (
                   <SelectItem key={source} value={source}>
-                    {source}
+                    {t(source)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -318,18 +320,18 @@ export function BookingModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Status</Label>
+            <Label>{t("Status")}</Label>
             <Select
               value={draft.status}
               onValueChange={(value: BookingStatus) => updateDraft("status", value)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select status" />
+                <SelectValue placeholder={t("Select status")} />
               </SelectTrigger>
               <SelectContent>
                 {statuses.map((status) => (
                   <SelectItem key={status} value={status}>
-                    {status}
+                    {t(status)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -337,7 +339,7 @@ export function BookingModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="amount">{t("Amount")}</Label>
             <Input
               id="amount"
               type="number"
@@ -348,13 +350,13 @@ export function BookingModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Currency</Label>
+            <Label>{t("Currency")}</Label>
             <Select
               value={draft.currency}
               onValueChange={(value: Currency) => updateDraft("currency", value)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select currency" />
+                <SelectValue placeholder={t("Select currency")} />
               </SelectTrigger>
               <SelectContent>
                 {currencies.map((currency) => (
@@ -367,11 +369,11 @@ export function BookingModal({
           </div>
 
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("Notes")}</Label>
             <Textarea
               id="notes"
               value={draft.notes}
-              placeholder="Arrival details, payment notes, invoice reminders"
+              placeholder={t("Arrival details, payment notes, invoice reminders")}
               onChange={(event) => updateDraft("notes", event.target.value)}
             />
           </div>
@@ -380,10 +382,10 @@ export function BookingModal({
             <div className="flex gap-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-3 text-sm text-amber-950 sm:col-span-2">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
               <div>
-                <p className="font-medium">Room already booked</p>
+                <p className="font-medium">{t("Room already booked")}</p>
                 <p className="mt-1 text-amber-900">
-                  {availabilityConflict.guestName} already has this room from{" "}
-                  {availabilityConflict.checkIn} to {availabilityConflict.checkOut}.
+                  {availabilityConflict.guestName} {t("already has this room from")}{" "}
+                  {availabilityConflict.checkIn} {t("to")} {availabilityConflict.checkOut}.
                 </p>
               </div>
             </div>
@@ -399,7 +401,7 @@ export function BookingModal({
                 disabled={saving || destructiveAction !== null}
               >
                 <Ban className="size-4" />
-                {destructiveAction === "cancel" ? "Cancelling..." : "Cancel booking"}
+                {destructiveAction === "cancel" ? t("Cancelling...") : t("Cancel booking")}
               </Button>
             ) : null}
             {booking && onDeleteBooking ? (
@@ -409,7 +411,7 @@ export function BookingModal({
                 disabled={saving || destructiveAction !== null}
               >
                 <Archive className="size-4" />
-                {destructiveAction === "delete" ? "Archiving..." : "Archive"}
+                {destructiveAction === "delete" ? t("Archiving...") : t("Archive")}
               </Button>
             ) : null}
           </div>
@@ -419,7 +421,7 @@ export function BookingModal({
               onClick={() => onOpenChange(false)}
               disabled={saving || destructiveAction !== null}
             >
-              Close
+              {t("Close")}
             </Button>
             <Button
               onClick={handleSave}
@@ -429,7 +431,7 @@ export function BookingModal({
                 availabilityConflict !== null
               }
             >
-              {saving ? "Saving..." : "Save booking"}
+              {saving ? t("Saving...") : t("Save booking")}
             </Button>
           </div>
         </DialogFooter>

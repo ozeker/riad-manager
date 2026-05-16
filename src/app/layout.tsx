@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { LanguageProvider } from "@/components/i18n/language-provider";
 import { AppShell } from "@/components/layout/app-shell";
+import { getRequestLocale } from "@/lib/i18n-server";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -20,19 +22,23 @@ export const metadata: Metadata = {
   description: "Internal management app for a small Moroccan riad",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale()
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <AppShell>{children}</AppShell>
-        <Toaster position="top-right" richColors />
+        <LanguageProvider initialLocale={locale}>
+          <AppShell>{children}</AppShell>
+          <Toaster position="top-right" richColors />
+        </LanguageProvider>
       </body>
     </html>
   );

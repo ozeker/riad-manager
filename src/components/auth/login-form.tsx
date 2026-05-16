@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation"
 import { FormEvent, useMemo, useState } from "react"
 import { Hotel, LockKeyhole } from "lucide-react"
 
+import { LanguageSwitcher } from "@/components/i18n/language-switcher"
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -25,6 +27,7 @@ function getSafeNextPath(nextPath: string | undefined) {
 
 export function LoginForm({ nextPath }: { nextPath?: string }) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
@@ -46,13 +49,13 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
 
       if (!response.ok) {
         const body = await response.json().catch(() => null)
-        throw new Error(body?.error ?? "Unable to sign in")
+        throw new Error(body?.error ?? t("Unable to sign in"))
       }
 
       router.replace(safeNextPath)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to sign in")
+      setError(err instanceof Error ? err.message : t("Unable to sign in"))
     } finally {
       setSaving(false)
     }
@@ -60,6 +63,9 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-4 py-10">
+      <div className="absolute right-4 top-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md rounded-lg border-border/80 shadow-sm">
         <CardHeader className="space-y-4">
           <div className="flex items-center gap-3">
@@ -68,14 +74,14 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
             </div>
             <div>
               <CardTitle>Riad Manager</CardTitle>
-              <CardDescription>Owner access</CardDescription>
+              <CardDescription>{t("Owner access")}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">Owner password</Label>
+              <Label htmlFor="password">{t("Owner password")}</Label>
               <div className="relative">
                 <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -98,7 +104,7 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
             ) : null}
 
             <Button type="submit" className="w-full" disabled={saving}>
-              {saving ? "Signing in..." : "Sign in"}
+              {saving ? t("Signing in...") : t("Sign in")}
             </Button>
           </form>
         </CardContent>

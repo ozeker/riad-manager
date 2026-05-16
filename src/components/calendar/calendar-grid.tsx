@@ -13,6 +13,7 @@ import { toast } from "sonner"
 
 import { BookingBlock } from "@/components/calendar/booking-block"
 import { BookingModal } from "@/components/calendar/booking-modal"
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -56,6 +57,7 @@ export function CalendarGrid({
   initialBookings,
   guests: initialGuests,
 }: CalendarGridProps) {
+  const { t } = useLanguage()
   const [bookings, setBookings] = useState<Booking[]>(initialBookings)
   const [guests, setGuests] = useState<Guest[]>(initialGuests)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
@@ -109,7 +111,7 @@ export function CalendarGrid({
 
     if (!response.ok) {
       const body = await response.json().catch(() => null)
-      throw new Error(body?.message ?? "Could not save booking.")
+      throw new Error(body?.message ?? t("Could not save booking."))
     }
 
     const savedBooking = (await response.json()) as Booking
@@ -138,10 +140,10 @@ export function CalendarGrid({
           booking.id === savedBooking.id ? savedBooking : booking
         )
       )
-      toast.success("Booking updated")
+      toast.success(t("Booking updated"))
     } else {
       setBookings((current) => [...current, savedBooking])
-      toast.success("Booking created")
+      toast.success(t("Booking created"))
     }
 
     setSelectedBooking(null)
@@ -158,13 +160,13 @@ export function CalendarGrid({
     })
 
     if (!response.ok) {
-      throw new Error("Could not archive booking.")
+      throw new Error(t("Could not archive booking."))
     }
 
     setBookings((current) => current.filter((item) => item.id !== booking.id))
     setSelectedBooking(null)
     setDraftCell(null)
-    toast.success("Booking archived")
+    toast.success(t("Booking archived"))
   }
 
   const nightsInView = bookings.filter(
@@ -184,9 +186,9 @@ export function CalendarGrid({
         <CardContent className="p-0">
           <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-base font-semibold">Reservation calendar</h2>
+              <h2 className="text-base font-semibold">{t("Reservation calendar")}</h2>
               <p className="text-sm text-muted-foreground">
-                Rooms are rows, dates are columns, and booking colors show source.
+                {t("Rooms are rows, dates are columns, and booking colors show source.")}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -195,7 +197,7 @@ export function CalendarGrid({
                   <span
                     className={cn("size-2 rounded-full", sourceLegend[source])}
                   />
-                  {source}
+                  {t(source)}
                 </Badge>
               ))}
             </div>
@@ -206,7 +208,7 @@ export function CalendarGrid({
             <div className="min-w-[1120px]">
               <div className="grid grid-cols-[12rem_1fr] border-b bg-muted/40">
                 <div className="sticky left-0 z-20 flex items-center border-r bg-muted/95 px-4 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  Room
+                  {t("Room")}
                 </div>
                 <div className="grid" style={gridStyle}>
                   {dates.map((date) => (
@@ -236,7 +238,7 @@ export function CalendarGrid({
                     <div className="sticky left-0 z-20 flex flex-col justify-center border-r bg-card px-4">
                       <p className="truncate text-sm font-semibold">{room.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Sleeps {room.capacity}
+                        {t("Sleeps")} {room.capacity}
                       </p>
                     </div>
                     <div className="relative min-h-20">
@@ -250,7 +252,7 @@ export function CalendarGrid({
                           >
                             <Plus className="size-4 opacity-0 transition group-hover:opacity-100" />
                             <span className="sr-only">
-                              Create booking for {room.name} on{" "}
+                              {t("Create booking for")} {room.name} {t("on")}{" "}
                               {format(date, "MMMM d, yyyy")}
                             </span>
                           </button>
@@ -282,7 +284,7 @@ export function CalendarGrid({
           </div>
 
           <div className="flex flex-col gap-3 p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <span>{nightsInView.length} bookings visible in this view</span>
+            <span>{nightsInView.length} {t("bookings visible in this view")}</span>
             <Button
               variant="outline"
               disabled={rooms.length === 0}
@@ -292,7 +294,7 @@ export function CalendarGrid({
               }}
             >
               <Plus className="size-4" />
-              New booking
+              {t("New booking")}
             </Button>
           </div>
         </CardContent>

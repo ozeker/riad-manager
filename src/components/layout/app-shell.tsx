@@ -4,6 +4,8 @@ import { Bell, LogOut, Search } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 
+import { LanguageSwitcher } from "@/components/i18n/language-switcher"
+import { useLanguage } from "@/components/i18n/language-provider"
 import { AppSidebar, MobileNav } from "@/components/layout/app-sidebar"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +20,7 @@ import {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { t } = useLanguage()
   const [loggingOut, setLoggingOut] = useState(false)
 
   async function handleLogout() {
@@ -46,13 +49,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <MobileNav />
               <div className="hidden items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground lg:flex">
                 <Search className="size-4" />
-                <span>Search bookings, guests, invoices</span>
+                <span>{t("Search bookings, guests, invoices")}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <LanguageSwitcher />
               <Button variant="outline" size="icon">
                 <Bell className="size-4" />
-                <span className="sr-only">Notifications</span>
+                <span className="sr-only">{t("Notifications")}</span>
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -60,13 +64,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <span className="flex size-5 items-center justify-center rounded bg-emerald-100 text-xs font-semibold text-emerald-800">
                       RA
                     </span>
-                    <span className="hidden sm:inline">Owner</span>
+                    <span className="hidden sm:inline">{t("Owner")}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
                   <DropdownMenuLabel>Riad Al Fes</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem disabled>Single owner mode</DropdownMenuItem>
+                  <DropdownMenuItem disabled>{t("Single owner mode")}</DropdownMenuItem>
                   <DropdownMenuItem
                     disabled={loggingOut}
                     onSelect={(event) => {
@@ -75,7 +79,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     }}
                   >
                     <LogOut className="size-4" />
-                    {loggingOut ? "Signing out..." : "Sign out"}
+                    {loggingOut ? t("Signing out...") : t("Sign out")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

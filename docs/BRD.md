@@ -99,6 +99,24 @@ Future improvements:
 - two-factor authentication
 - staff/receptionist accounts
 
+### 1A. UI Language
+
+The app supports an owner-selectable UI language.
+
+Current behavior:
+
+- English and French are available
+- the language switcher is visible on login and inside the app header
+- the selected language is saved in the browser and cookie
+- code, database fields, and backend implementation remain in English
+- business data entered by the owner is not automatically translated
+
+Acceptance checks:
+
+- switching to French updates the main navigation, page headers, forms, and action labels
+- switching back to English restores the English UI
+- refreshing the page keeps the selected language
+
 ### 2. Dashboard
 
 The dashboard gives the owner an operational overview.

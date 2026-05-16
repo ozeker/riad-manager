@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Pencil, Plus } from "lucide-react"
 import { toast } from "sonner"
 
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -57,6 +58,7 @@ export function GuestManager({
   rooms,
 }: GuestManagerProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [guests, setGuests] = useState(initialGuests)
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<GuestDraft>(emptyGuest)
@@ -90,7 +92,7 @@ export function GuestManager({
 
   async function saveGuest() {
     if (!draft.fullName.trim()) {
-      toast.error("Guest name is required.")
+      toast.error(t("Guest name is required."))
       return
     }
 
@@ -105,7 +107,7 @@ export function GuestManager({
       })
 
       if (!response.ok) {
-        throw new Error("Could not save guest.")
+        throw new Error(t("Could not save guest."))
       }
 
       const savedGuest = (await response.json()) as Guest
@@ -123,11 +125,11 @@ export function GuestManager({
         )
       })
 
-      toast.success(draft.id ? "Guest updated" : "Guest created")
+      toast.success(draft.id ? t("Guest updated") : t("Guest created"))
       setOpen(false)
       router.refresh()
     } catch {
-      toast.error("The guest could not be saved.")
+      toast.error(t("The guest could not be saved."))
     } finally {
       setSaving(false)
     }
@@ -138,7 +140,7 @@ export function GuestManager({
       <div className="mb-4 flex justify-end">
         <Button onClick={openCreate}>
           <Plus className="size-4" />
-          New guest
+          {t("New guest")}
         </Button>
       </div>
 
@@ -147,12 +149,12 @@ export function GuestManager({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Nationality</TableHead>
-                <TableHead>ID / Passport</TableHead>
-                <TableHead>Booking history</TableHead>
+                <TableHead>{t("Name")}</TableHead>
+                <TableHead>{t("Phone")}</TableHead>
+                <TableHead>{t("Email")}</TableHead>
+                <TableHead>{t("Nationality")}</TableHead>
+                <TableHead>{t("ID / Passport")}</TableHead>
+                <TableHead>{t("Booking history")}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -171,8 +173,7 @@ export function GuestManager({
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <Badge variant="secondary" className="w-fit">
-                          {guestBookings.length} booking
-                          {guestBookings.length === 1 ? "" : "s"}
+                          {guestBookings.length} {t(guestBookings.length === 1 ? "booking" : "bookings")}
                         </Badge>
                         {latestBooking ? (
                           <span className="text-xs text-muted-foreground">
@@ -181,7 +182,7 @@ export function GuestManager({
                           </span>
                         ) : (
                           <span className="text-xs text-muted-foreground">
-                            No stays yet
+                            {t("No stays yet")}
                           </span>
                         )}
                       </div>
@@ -193,7 +194,7 @@ export function GuestManager({
                         onClick={() => openEdit(guest)}
                       >
                         <Pencil className="size-4" />
-                        <span className="sr-only">Edit {guest.fullName}</span>
+                        <span className="sr-only">{t("Edit")} {guest.fullName}</span>
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -207,25 +208,25 @@ export function GuestManager({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{draft.id ? "Edit guest" : "New guest"}</DialogTitle>
+            <DialogTitle>{draft.id ? t("Edit guest") : t("New guest")}</DialogTitle>
             <DialogDescription>
-              Guest details are saved to the PostgreSQL database.
+              {t("Guest details are saved to the PostgreSQL database.")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-2 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="fullName">Full name</Label>
+              <Label htmlFor="fullName">{t("Full name")}</Label>
               <Input
                 id="fullName"
                 value={draft.fullName}
-                placeholder="Guest full name"
+                placeholder={t("Guest full name")}
                 onChange={(event) => updateDraft("fullName", event.target.value)}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t("Phone")}</Label>
               <Input
                 id="phone"
                 value={draft.phone}
@@ -235,7 +236,7 @@ export function GuestManager({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("Email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -246,7 +247,7 @@ export function GuestManager({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="nationality">Nationality</Label>
+              <Label htmlFor="nationality">{t("Nationality")}</Label>
               <Input
                 id="nationality"
                 value={draft.nationality}
@@ -258,7 +259,7 @@ export function GuestManager({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="documentNumber">ID / Passport number</Label>
+              <Label htmlFor="documentNumber">{t("ID / Passport number")}</Label>
               <Input
                 id="documentNumber"
                 value={draft.documentNumber}
@@ -270,21 +271,20 @@ export function GuestManager({
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t("Notes")}</Label>
               <Textarea
                 id="notes"
                 value={draft.notes}
-                placeholder="Preferences, language, arrival notes"
+                placeholder={t("Preferences, language, arrival notes")}
                 onChange={(event) => updateDraft("notes", event.target.value)}
               />
             </div>
 
             <div className="space-y-3 rounded-lg border bg-muted/30 p-3 sm:col-span-2">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium">Booking history</p>
+                <p className="text-sm font-medium">{t("Booking history")}</p>
                 <Badge variant="outline">
-                  {selectedGuestBookings.length} booking
-                  {selectedGuestBookings.length === 1 ? "" : "s"}
+                  {selectedGuestBookings.length} {t(selectedGuestBookings.length === 1 ? "booking" : "bookings")}
                 </Badge>
               </div>
               {selectedGuestBookings.length > 0 ? (
@@ -296,7 +296,7 @@ export function GuestManager({
                     >
                       <div>
                         <p className="font-medium">
-                          {roomNameById.get(booking.roomId) ?? "Unknown room"}
+                          {roomNameById.get(booking.roomId) ?? t("Unknown room")}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {booking.checkIn} to {booking.checkOut} ·{" "}
@@ -311,7 +311,7 @@ export function GuestManager({
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No booking history yet.
+                  {t("No booking history yet.")}
                 </p>
               )}
             </div>
@@ -323,10 +323,10 @@ export function GuestManager({
               onClick={() => setOpen(false)}
               disabled={saving}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={saveGuest} disabled={saving}>
-              {saving ? "Saving..." : "Save guest"}
+              {saving ? t("Saving...") : t("Save guest")}
             </Button>
           </DialogFooter>
         </DialogContent>

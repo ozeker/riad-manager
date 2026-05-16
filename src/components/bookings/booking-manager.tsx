@@ -9,6 +9,7 @@ import {
   BookingDraft,
   BookingModal,
 } from "@/components/calendar/booking-modal"
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -66,6 +67,7 @@ export function BookingManager({
   payments,
 }: BookingManagerProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [bookings, setBookings] = useState(initialBookings)
   const [guests, setGuests] = useState(initialGuests)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
@@ -108,7 +110,7 @@ export function BookingManager({
 
     if (!response.ok) {
       const body = await response.json().catch(() => null)
-      throw new Error(body?.message ?? "Could not save booking.")
+      throw new Error(body?.message ?? t("Could not save booking."))
     }
 
     const savedBooking = (await response.json()) as Booking
@@ -142,7 +144,7 @@ export function BookingManager({
       ])
     }
 
-    toast.success(draft.id ? "Booking updated" : "Booking created")
+    toast.success(draft.id ? t("Booking updated") : t("Booking created"))
     closeModal(false)
     router.refresh()
   }
@@ -157,11 +159,11 @@ export function BookingManager({
     })
 
     if (!response.ok) {
-      throw new Error("Could not archive booking.")
+      throw new Error(t("Could not archive booking."))
     }
 
     setBookings((current) => current.filter((item) => item.id !== booking.id))
-    toast.success("Booking archived")
+    toast.success(t("Booking archived"))
     closeModal(false)
     router.refresh()
   }
@@ -171,7 +173,7 @@ export function BookingManager({
       <div className="mb-4 flex justify-end">
         <Button onClick={openCreate}>
           <Plus className="size-4" />
-          New booking
+          {t("New booking")}
         </Button>
       </div>
 
@@ -180,13 +182,13 @@ export function BookingManager({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Guest</TableHead>
-                <TableHead>Room</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Stay</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>{t("Guest")}</TableHead>
+                <TableHead>{t("Room")}</TableHead>
+                <TableHead>{t("Source")}</TableHead>
+                <TableHead>{t("Status")}</TableHead>
+                <TableHead>{t("Payment")}</TableHead>
+                <TableHead>{t("Stay")}</TableHead>
+                <TableHead className="text-right">{t("Amount")}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -200,22 +202,22 @@ export function BookingManager({
                     <TableCell className="font-medium">
                       {booking.guestName}
                     </TableCell>
-                    <TableCell>{room?.name ?? "Unknown room"}</TableCell>
+                    <TableCell>{room?.name ?? t("Unknown room")}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{booking.source}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={booking.status === "cancelled" ? "outline" : "secondary"}>
-                        {booking.status}
+                        {t(booking.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={paymentStatusVariant[paymentStatus]}>
-                        {paymentStatus}
+                        {t(paymentStatus)}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {booking.checkIn} to {booking.checkOut}
+                      {booking.checkIn} {t("to")} {booking.checkOut}
                     </TableCell>
                     <TableCell className="text-right">
                       {formatMoney(booking.amount, booking.currency)}
@@ -233,14 +235,14 @@ export function BookingManager({
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openEdit(booking)}>
                             <Pencil className="size-4" />
-                            Edit
+                            {t("Edit")}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => cancelBooking(booking)}>
-                            Cancel booking
+                            {t("Cancel booking")}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => archiveBooking(booking)}>
-                            Archive
+                            {t("Archive")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

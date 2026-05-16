@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -166,6 +167,7 @@ export function InvoiceManager({
   touristTaxMadPerPersonNight,
 }: InvoiceManagerProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [invoices, setInvoices] = useState(initialInvoices)
   const [draft, setDraft] = useState<InvoiceDraft>(() =>
     createEmptyInvoice(
@@ -210,7 +212,7 @@ export function InvoiceManager({
 
   function openEdit(invoice: Invoice) {
     if (invoice.status === "final") {
-      toast.info("Final invoices are locked.")
+      toast.info(t("Final invoices are locked."))
       return
     }
 
@@ -286,14 +288,14 @@ export function InvoiceManager({
 
   async function saveInvoice() {
     if (!draft.bookingId) {
-      toast.error("Choose a booking before saving.")
+      toast.error(t("Choose a booking before saving."))
       return
     }
 
     const validLines = draft.lines.filter((line) => line.description.trim())
 
     if (validLines.length === 0) {
-      toast.error("Add at least one invoice line.")
+      toast.error(t("Add at least one invoice line."))
       return
     }
 
@@ -328,7 +330,7 @@ export function InvoiceManager({
         return [savedInvoice, ...current]
       })
 
-      toast.success(draft.id ? "Invoice draft updated" : "Invoice draft created")
+      toast.success(draft.id ? t("Invoice draft updated") : t("Invoice draft created"))
       setOpen(false)
       router.refresh()
     } catch (error) {
@@ -344,7 +346,7 @@ export function InvoiceManager({
 
   async function deleteInvoice(invoice: Invoice) {
     if (invoice.status === "final") {
-      toast.error("Final invoices cannot be deleted.")
+      toast.error(t("Final invoices cannot be deleted."))
       return
     }
 
@@ -362,7 +364,7 @@ export function InvoiceManager({
       setInvoices((current) =>
         current.filter((item) => item.id !== invoice.id)
       )
-      toast.success("Invoice draft deleted")
+      toast.success(t("Invoice draft deleted"))
       router.refresh()
     } catch (error) {
       toast.error(
@@ -419,7 +421,7 @@ export function InvoiceManager({
         <Card className="rounded-lg border-border/80 shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Draft invoices
+              {t("Draft invoices")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -431,7 +433,7 @@ export function InvoiceManager({
         <Card className="rounded-lg border-border/80 shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
-              Final invoices
+              {t("Final invoices")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -444,7 +446,7 @@ export function InvoiceManager({
           <Card key={currency} className="rounded-lg border-border/80 shadow-none">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">
-                {currency} total
+                {currency} {t("total")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -459,7 +461,7 @@ export function InvoiceManager({
       <div className="mb-4 flex justify-end">
         <Button onClick={openCreate} disabled={availableBookings.length === 0}>
           <Plus className="size-4" />
-          Draft invoice
+          {t("Draft invoice")}
         </Button>
       </div>
 
@@ -468,12 +470,12 @@ export function InvoiceManager({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Guest</TableHead>
-                <TableHead>Stay</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Issue date</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead>{t("Invoice")}</TableHead>
+                <TableHead>{t("Guest")}</TableHead>
+                <TableHead>{t("Stay")}</TableHead>
+                <TableHead>{t("Status")}</TableHead>
+                <TableHead>{t("Issue date")}</TableHead>
+                <TableHead className="text-right">{t("Total")}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -490,7 +492,7 @@ export function InvoiceManager({
                     </div>
                   </TableCell>
                   <TableCell>
-                    {invoice.checkIn} to {invoice.checkOut}
+                    {invoice.checkIn} {t("to")} {invoice.checkOut}
                   </TableCell>
                   <TableCell>
                     <Badge
@@ -500,7 +502,7 @@ export function InvoiceManager({
                       {invoice.status === "final" ? (
                         <LockKeyhole className="size-3" />
                       ) : null}
-                      {invoice.status}
+                      {t(invoice.status)}
                     </Badge>
                   </TableCell>
                   <TableCell>{invoice.issueDate}</TableCell>
@@ -521,7 +523,7 @@ export function InvoiceManager({
                         <DropdownMenuItem asChild>
                           <a href={`/api/invoices/pdf?id=${invoice.id}`}>
                             <Download className="size-4" />
-                            Invoice PDF
+                            {t("Invoice PDF")}
                           </a>
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -529,7 +531,7 @@ export function InvoiceManager({
                           disabled={invoice.status === "final"}
                         >
                           <Pencil className="size-4" />
-                          Edit draft
+                          {t("Edit draft")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => finalizeInvoice(invoice)}
@@ -540,8 +542,8 @@ export function InvoiceManager({
                         >
                           <CheckCircle2 className="size-4" />
                           {finalizingId === invoice.id
-                            ? "Finalizing..."
-                            : "Finalize"}
+                            ? t("Finalizing...")
+                            : t("Finalize")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -552,7 +554,7 @@ export function InvoiceManager({
                           }
                         >
                           <Trash2 className="size-4" />
-                          {deletingId === invoice.id ? "Deleting..." : "Delete"}
+                          {deletingId === invoice.id ? t("Deleting...") : t("Delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -565,7 +567,7 @@ export function InvoiceManager({
                     colSpan={7}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No invoice drafts yet.
+                    {t("No invoice drafts yet.")}
                   </TableCell>
                 </TableRow>
               ) : null}
@@ -579,24 +581,23 @@ export function InvoiceManager({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="size-5" />
-              {draft.id ? "Edit invoice draft" : "Draft invoice"}
+              {draft.id ? t("Edit invoice draft") : t("Draft invoice")}
             </DialogTitle>
             <DialogDescription>
-              Drafts stay editable. PDF generation and final invoice numbering
-              are available from the invoice actions menu.
+              {t("Drafts stay editable. PDF generation and final invoice numbering are available from the invoice actions menu.")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-2 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Booking</Label>
+              <Label>{t("Booking")}</Label>
               <Select
                 value={draft.bookingId}
                 onValueChange={changeBooking}
                 disabled={Boolean(draft.id)}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose booking" />
+                  <SelectValue placeholder={t("Choose booking")} />
                 </SelectTrigger>
                 <SelectContent>
                   {bookings.map((booking) => (
@@ -616,7 +617,7 @@ export function InvoiceManager({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="issueDate">Issue date</Label>
+              <Label htmlFor="issueDate">{t("Issue date")}</Label>
               <Input
                 id="issueDate"
                 type="date"
@@ -632,10 +633,10 @@ export function InvoiceManager({
 
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <Label>Invoice lines</Label>
+              <Label>{t("Invoice lines")}</Label>
               <Button type="button" variant="outline" size="sm" onClick={addLine}>
                 <Plus className="size-4" />
-                Line
+                {t("Line")}
               </Button>
             </div>
 
@@ -643,10 +644,10 @@ export function InvoiceManager({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-64">Description</TableHead>
-                    <TableHead className="w-28">Qty</TableHead>
-                    <TableHead className="w-36">Unit price</TableHead>
-                    <TableHead className="w-36 text-right">Line total</TableHead>
+                    <TableHead className="min-w-64">{t("Description")}</TableHead>
+                    <TableHead className="w-28">{t("Qty")}</TableHead>
+                    <TableHead className="w-36">{t("Unit price")}</TableHead>
+                    <TableHead className="w-36 text-right">{t("Line total")}</TableHead>
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
@@ -656,7 +657,7 @@ export function InvoiceManager({
                       <TableCell>
                         <Input
                           value={line.description}
-                          placeholder="Room stay"
+                          placeholder={t("Room stay")}
                           onChange={(event) =>
                             updateLine(index, "description", event.target.value)
                           }
@@ -714,10 +715,10 @@ export function InvoiceManager({
 
           <div className="flex flex-col gap-2 rounded-md bg-muted/50 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
             <span className="text-muted-foreground">
-              Currency follows the selected booking.
+              {t("Currency follows the selected booking.")}
             </span>
             <span className="text-lg font-semibold">
-              Total: {formatMoney(draftTotal, draftCurrency)}
+              {t("Total")}: {formatMoney(draftTotal, draftCurrency)}
             </span>
           </div>
 
@@ -727,10 +728,10 @@ export function InvoiceManager({
               onClick={() => setOpen(false)}
               disabled={saving}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={saveInvoice} disabled={saving}>
-              {saving ? "Saving..." : "Save draft"}
+              {saving ? t("Saving...") : t("Save draft")}
             </Button>
           </DialogFooter>
         </DialogContent>

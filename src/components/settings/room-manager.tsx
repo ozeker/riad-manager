@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Pencil, Plus } from "lucide-react"
 import { toast } from "sonner"
 
+import { useLanguage } from "@/components/i18n/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -49,6 +50,7 @@ const emptyRoom: RoomDraft = {
 
 export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [rooms, setRooms] = useState(initialRooms)
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<RoomDraft>(emptyRoom)
@@ -80,7 +82,7 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
 
   async function persistRoom(nextDraft: RoomDraft) {
     if (!nextDraft.name.trim()) {
-      toast.error("Room name is required.")
+      toast.error(t("Room name is required."))
       throw new Error("Room name is required.")
     }
 
@@ -93,7 +95,7 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
     })
 
     if (!response.ok) {
-      throw new Error("Could not save room.")
+      throw new Error(t("Could not save room."))
     }
 
     const savedRoom = (await response.json()) as Room
@@ -117,13 +119,13 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
     setSaving(true)
     try {
       await persistRoom(nextDraft)
-      toast.success(nextDraft.id ? "Room updated" : "Room created")
+      toast.success(nextDraft.id ? t("Room updated") : t("Room created"))
       setOpen(false)
     } catch (error) {
       if (error instanceof Error && error.message === "Room name is required.") {
         return
       }
-      toast.error("The room could not be saved.")
+      toast.error(t("The room could not be saved."))
     } finally {
       setSaving(false)
     }
@@ -137,12 +139,12 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
 
     try {
       await persistRoom(nextRoom)
-      toast.success(active ? "Room activated" : "Room deactivated")
+      toast.success(active ? t("Room activated") : t("Room deactivated"))
     } catch {
       setRooms((current) =>
         current.map((item) => (item.id === room.id ? room : item))
       )
-      toast.error("The room status could not be saved.")
+      toast.error(t("The room status could not be saved."))
     }
   }
 
@@ -150,21 +152,21 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
     <>
       <Card className="rounded-lg border-border/80 shadow-none">
         <CardHeader className="flex flex-row items-center justify-between gap-3">
-          <CardTitle className="text-base">Rooms</CardTitle>
+          <CardTitle className="text-base">{t("Rooms")}</CardTitle>
           <Button size="sm" onClick={openCreate}>
             <Plus className="size-4" />
-            Add room
+            {t("Add room")}
           </Button>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Room</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Rates</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-28 text-right">Actions</TableHead>
+                <TableHead>{t("Room")}</TableHead>
+                <TableHead>{t("Capacity")}</TableHead>
+                <TableHead>{t("Rates")}</TableHead>
+                <TableHead>{t("Status")}</TableHead>
+                <TableHead className="w-28 text-right">{t("Actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -193,7 +195,7 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
                         aria-label={`Set ${room.name} active status`}
                       />
                       <Badge variant={room.active ? "secondary" : "outline"}>
-                        {room.active ? "Active" : "Inactive"}
+                        {room.active ? t("Active") : t("Inactive")}
                       </Badge>
                     </div>
                   </TableCell>
@@ -204,7 +206,7 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
                       onClick={() => openEdit(room)}
                     >
                       <Pencil className="size-4" />
-                      <span className="sr-only">Edit {room.name}</span>
+                      <span className="sr-only">{t("Edit")} {room.name}</span>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -217,15 +219,15 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>{draft.id ? "Edit room" : "Add room"}</DialogTitle>
+            <DialogTitle>{draft.id ? t("Edit room") : t("Add room")}</DialogTitle>
             <DialogDescription>
-              Room changes are saved to the PostgreSQL database.
+              {t("Room changes are saved to the PostgreSQL database.")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-2 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="roomName">Room name</Label>
+              <Label htmlFor="roomName">{t("Room name")}</Label>
               <Input
                 id="roomName"
                 value={draft.name}
@@ -235,7 +237,7 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity</Label>
+              <Label htmlFor="capacity">{t("Capacity")}</Label>
               <Input
                 id="capacity"
                 type="number"
@@ -249,9 +251,9 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
 
             <div className="flex items-end justify-between gap-4 rounded-lg border p-3">
               <div className="space-y-1">
-                <Label htmlFor="active">Active</Label>
+                <Label htmlFor="active">{t("Active")}</Label>
                 <p className="text-xs text-muted-foreground">
-                  Active rooms appear on the calendar.
+                  {t("Active rooms appear on the calendar.")}
                 </p>
               </div>
               <Switch
@@ -262,7 +264,7 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rateMad">MAD rate</Label>
+              <Label htmlFor="rateMad">{t("MAD rate")}</Label>
               <Input
                 id="rateMad"
                 type="number"
@@ -273,7 +275,7 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rateEur">EUR rate</Label>
+              <Label htmlFor="rateEur">{t("EUR rate")}</Label>
               <Input
                 id="rateEur"
                 type="number"
@@ -284,7 +286,7 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="rateUsd">USD rate</Label>
+              <Label htmlFor="rateUsd">{t("USD rate")}</Label>
               <Input
                 id="rateUsd"
                 type="number"
@@ -301,10 +303,10 @@ export function RoomManager({ rooms: initialRooms }: RoomManagerProps) {
               onClick={() => setOpen(false)}
               disabled={saving}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={() => saveRoom()} disabled={saving}>
-              {saving ? "Saving..." : "Save room"}
+              {saving ? t("Saving...") : t("Save room")}
             </Button>
           </DialogFooter>
         </DialogContent>
